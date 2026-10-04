@@ -54,7 +54,7 @@ const handlers: Handlers<keyof Messages> = {
   "ollama.switch": ({ data: { from, to } }) =>
     Promise.resolve(from && ollama.generate({ model: from, prompt: "", keep_alive: 0 }))
       .catch(() => {}) // not loaded or not installed: nothing to free
-      .then(() => ollama.generate({ model: to, prompt: "", keep_alive: -1 }))
+      .then(() => to ? ollama.generate({ model: to, prompt: "", keep_alive: -1 }) : null)
       .then(() => ({ ok: true as const }), (e) => ({ error: String(e?.message ?? e) })),
 
   "gemini.supported": () => geminiAvailability().then((a) => a === "available"),

@@ -88,6 +88,30 @@ let models: string[] | null = null;
 let switching = false;
 let gemini: Availability = "unavailable";
 
+const geminiLabels: Record<Availability, string> = {
+  available: "",
+  downloadable: " (download required)",
+  downloading: " (downloading)",
+  unavailable: " (unavailable)",
+};
+
+const modelStatus = () => {
+  if (settings.model === GEMINI_MODEL) {
+    if (gemini === "available") return "Gemini Nano runs locally in Chrome. Your text stays on this device.";
+    if (gemini === "unavailable") return "Gemini Nano isn't available in this browser. Choose an installed Ollama model.";
+    return "Select Gemini Nano to finish downloading the model in Chrome.";
+  }
+  if (models === null) {
+    const offline = $("model-status").dataset.offline;
+    if (offline !== undefined) return offline;
+    if (gemini === "available") return "Ollama isn't reachable. Checks use Gemini Nano in Chrome. You can select it here.";
+    if (gemini !== "unavailable") return "Ollama isn't reachable. Select Gemini Nano to download Chrome's local model.";
+    return "No model is available. Start Ollama, or use Chrome on a device that supports Gemini Nano.";
+  }
+  if (models.length === 0) return "Ollama is running but has no models. Pull one with “ollama pull gemma4:e2b-it-qat”.";
+  return "The Ollama model used for every check. Larger models are slower but catch more.";
+};
+
 const renderModel = () => {
   const select = $<HTMLSelectElement>("model");
   const names = [
@@ -101,9 +125,9 @@ const renderModel = () => {
     ...options.map((name) => {
       const option = new Option(name, name, false, name === settings.model);
       if (name === GEMINI_MODEL) {
-        option.textContent = `Gemini Nano · Chrome${gemini === "downloadable" ? " (download required)" : gemini === "downloading" ? " (downloading)" : gemini === "unavailable" ? " (unavailable)" : ""}`;
+        option.textContent = `Gemini Nano · Chrome${geminiLabels[gemini]}`;
         option.disabled = gemini === "unavailable";
-      } else if (!models?.includes(name)) {
+      } else if (models && !models.includes(name)) {
         option.textContent = `${name} (not installed)`;
         option.disabled = true;
       }
@@ -120,23 +144,7 @@ const renderModel = () => {
         ? "Finish downloading Gemini Nano"
         : "Download Gemini Nano";
   }
-  $("model-status").textContent =
-    settings.model === GEMINI_MODEL
-      ? gemini === "available"
-        ? "Gemini Nano runs locally in Chrome. Your text stays on this device."
-        : gemini === "unavailable"
-          ? "Gemini Nano isn't available in this browser. Choose an installed Ollama model."
-          : "Select Gemini Nano to finish downloading the model in Chrome."
-      : models === null
-        ? ($("model-status").dataset.offline ??
-          (gemini === "available"
-            ? "Ollama isn't reachable. Checks use Gemini Nano in Chrome. You can select it here."
-            : gemini !== "unavailable"
-              ? "Ollama isn't reachable. Select Gemini Nano to download Chrome's local model."
-              : "No model is available. Start Ollama, or use Chrome on a device that supports Gemini Nano."))
-        : models.length === 0
-          ? "Ollama is running but has no models. Pull one with “ollama pull gemma4:e2b-it-qat”."
-          : "The Ollama model used for every check. Larger models are slower but catch more.";
+  $("model-status").textContent = modelStatus();
 };
 
 const render = () => {
@@ -177,10 +185,11 @@ const switchModel = async (to: string) => {
   if (switching) return;
   const select = $<HTMLSelectElement>("model");
   const from = settings.model;
+  const modelName = to === GEMINI_MODEL ? "Gemini Nano" : to;
   const load = $("model-load");
   load.hidden = false;
   load.dataset.state = "loading";
-  load.textContent = `Loading ${to === GEMINI_MODEL ? "Gemini Nano" : to}…`;
+  load.textContent = `Loading ${modelName}…`;
   switching = true;
   select.disabled = true;
   const download = $<HTMLButtonElement>("gemini-download");
@@ -212,17 +221,20 @@ const switchModel = async (to: string) => {
     }
     await saveSettings({ model: to });
     settings = { ...settings, model: to };
+    if (to === GEMINI_MODEL && from !== GEMINI_MODEL) {
+      await send({ type: "ollama.switch", data: { from, to: null } }).catch(console.warn);
+    }
     if (to === GEMINI_MODEL && from === to) {
       await send({ type: "gemini.ready" });
     }
     load.dataset.state = "ready";
-    load.textContent = `${to === GEMINI_MODEL ? "Gemini Nano" : to} is loaded. Checks use it from now on.`;
+    load.textContent = `${modelName} is loaded. Checks use it from now on.`;
   } catch (error) {
     if (error instanceof Error && error.message === GEMINI_TEST_BACKEND_ERROR) {
       gemini = "unavailable";
     }
     load.dataset.state = "error";
-    load.textContent = `Couldn't load ${to === GEMINI_MODEL ? "Gemini Nano" : to}: ${error instanceof Error ? error.message : String(error)}`;
+    load.textContent = `Couldn't load ${modelName}: ${error instanceof Error ? error.message : String(error)}`;
   } finally {
     switching = false;
     renderModel();

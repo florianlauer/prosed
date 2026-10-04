@@ -12,7 +12,7 @@ import {
 } from "../settings";
 import { formalityLevels, Tone, tones } from "../prompts";
 import { formality, rewrite, tonesFor, type Generate, type Rewrite } from "../check";
-import { send } from "../messages";
+import { send, type Message } from "../messages";
 import { CheckSession } from "../session";
 import { GEMINI_MODEL } from "../gemini";
 import {
@@ -25,6 +25,13 @@ import {
   wordCount,
 } from "./text";
 import { checkIcon, createDiff, powerIcon, rewriteIcon, spinnerIcon } from "./render";
+import { siteHostname } from "./site";
+
+const hostname = siteHostname({
+  href: location.href,
+  ancestorOrigins: Array.from(location.ancestorOrigins),
+  referrer: document.referrer,
+});
 
 // Kept current by main(); read at event time so changes in the options page apply at once.
 let settings: Settings = defaultSettings;
@@ -170,6 +177,9 @@ const gemini: Provider = {
       data: { text: prompt, responseConstraint: schema },
     });
 
+    if (response === null) {
+      throw new DOMException("The check was cancelled.", "AbortError");
+    }
     if (!response) {
       throw new Error("Make sure that Gemini is working");
     }
@@ -233,7 +243,7 @@ const isTextArea = (
   return (
     ((node instanceof HTMLElement && node.contentEditable === "true") ||
       node instanceof HTMLTextAreaElement) &&
-    (node.spellcheck || spellcheckOffAllowed.includes(location.hostname))
+    (node.spellcheck || spellcheckOffAllowed.includes(hostname))
   );
 };
 
@@ -330,8 +340,8 @@ class Tooltip {
     const siteOff = document.createElement("button");
     siteOff.type = "button";
     siteOff.className = "aig-link";
-    siteOff.textContent = `Turn off on ${location.hostname}`;
-    siteOff.addEventListener("click", () => void disableSite(location.hostname));
+    siteOff.textContent = `Turn off on ${hostname}`;
+    siteOff.addEventListener("click", () => void disableSite(hostname));
     foot.append(settingsLink, siteOff);
 
     this.#tooltip.append(head, this.#body, foot);
@@ -1597,7 +1607,7 @@ const logSkipped = (target: EventTarget, event: string) => {
   }
 };
 
-const siteDisabled = () => settings.disabledSites.includes(location.hostname);
+const siteDisabled = () => settings.disabledSites.includes(hostname);
 
 const inputListener = (provider: () => Provider | null) => async (e: Event) => {
   const target = e.target;
@@ -1711,7 +1721,7 @@ const main = async () => {
       control.update();
     }
   };
-  chrome.runtime.onMessage.addListener((message) => {
+  chrome.runtime.onMessage.addListener((message: Message) => {
     if (message.type === "gemini.ready" && settings.model === GEMINI_MODEL) {
       void selectProvider();
     }

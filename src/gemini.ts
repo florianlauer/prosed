@@ -29,6 +29,18 @@ export const geminiVerify = async ({ session }: { session: LanguageModel }) => {
   modelResponse(await session.prompt("Reply with only OK."));
 };
 
+const promptSession = async ({
+  session,
+  text,
+  ...options
+}: LanguageModelPromptOptions & { session: LanguageModel; text: LanguageModelPrompt }) => {
+  try {
+    return modelResponse(await session.prompt(text, options));
+  } finally {
+    session.destroy();
+  }
+};
+
 export const geminiGenerate = async ({
   text,
   signal,
@@ -37,11 +49,10 @@ export const geminiGenerate = async ({
   text: LanguageModelPrompt;
   signal: AbortSignal;
 }) => {
-  let session: LanguageModel | undefined;
   try {
-    session = await LanguageModel.create({ ...geminiOptions, signal });
+    const session = await LanguageModel.create({ ...geminiOptions, signal });
     try {
-      return modelResponse(await session.prompt(text, { ...options, signal }));
+      return await promptSession({ session, text, ...options, signal });
     } catch (error) {
       if (
         signal.aborted ||
@@ -55,20 +66,16 @@ export const geminiGenerate = async ({
       }
       // Some browser backends accept prompts but reject constrained decoding.
       const { responseConstraint, ...fallbackOptions } = options;
-      session.destroy();
-      session = undefined;
-      session = await LanguageModel.create({ ...geminiOptions, signal });
-      return modelResponse(
-        await session.prompt(
-          `${text}\n\nReturn only valid JSON matching this schema, without markdown or explanations:\n${JSON.stringify(responseConstraint)}`,
-          { ...fallbackOptions, signal },
-        ),
-      );
+      const fallbackSession = await LanguageModel.create({ ...geminiOptions, signal });
+      return await promptSession({
+        session: fallbackSession,
+        text: `${text}\n\nReturn only valid JSON matching this schema, without markdown or explanations:\n${JSON.stringify(responseConstraint)}`,
+        ...fallbackOptions,
+        signal,
+      });
     }
   } catch (error) {
     if (signal.aborted) return null;
     return { error: String(error) };
-  } finally {
-    session?.destroy();
   }
 };

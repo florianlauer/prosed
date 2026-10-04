@@ -14,6 +14,35 @@ const mockLanguageModel = (t: TestContext, api?: object) => {
   });
 };
 
+test("unsupported session creation does not retry constrained generation", async (t) => {
+  let created = 0;
+  mockLanguageModel(t, {
+    create: async () => {
+      created++;
+      throw new DOMException("Unsupported language", "NotSupportedError");
+    },
+  });
+  assert.deepEqual(await geminiGenerate({ text: "Fix this.", signal: new AbortController().signal, responseConstraint: { type: "object" } }), { error: "NotSupportedError: Unsupported language" });
+  assert.equal(created, 1);
+});
+
+test("failed fallback creation destroys the initial session exactly once", async (t) => {
+  let created = 0;
+  let destroyed = 0;
+  mockLanguageModel(t, {
+    create: async () => {
+      if (++created === 2) throw new Error("Model unavailable");
+      return {
+        prompt: async () => { throw new DOMException("Unsupported constraint", "NotSupportedError"); },
+        destroy: () => { destroyed++; },
+      };
+    },
+  });
+  assert.deepEqual(await geminiGenerate({ text: "Fix this.", signal: new AbortController().signal, responseConstraint: { type: "object" } }), { error: "Error: Model unavailable" });
+  assert.equal(created, 2);
+  assert.equal(destroyed, 1);
+});
+
 test("browsers without the Prompt API report unavailable without throwing", async (t) => {
   mockLanguageModel(t);
   assert.equal(await geminiAvailability(), "unavailable");
