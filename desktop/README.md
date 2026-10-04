@@ -58,13 +58,13 @@ It prints the field's text, frame, selection and the word's bounds, and replaces
 
 The macOS app is signed with a self-signed certificate. Gatekeeper doesn't accept it, but the signature stays the same from one build to the next, so macOS keeps the Accessibility permission across updates. An unsigned or ad hoc signed build looks like a new app every time.
 
-Create the certificate once, in Keychain Access: Certificate Assistant > Create a Certificate…, named `prosed Self-Signed`, with the identity type "Self Signed Root" and the certificate type "Code Signing". Export it to a `.p12` and keep it: a build signed with another certificate loses the permission on every Mac.
+Create the certificate once, in Keychain Access: Certificate Assistant > Create a Certificate…, named `AI Grammar Self-Signed`, with the identity type "Self Signed Root" and the certificate type "Code Signing". Export it to a `.p12` and keep it: a build signed with another certificate loses the permission on every Mac. The certificate keeps its original name after the rename to prosed; use the name shown in your keychain.
 
 Bump `version` in `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`, then build and check:
 
 ```shell
 cd desktop/src-tauri
-APPLE_SIGNING_IDENTITY="prosed Self-Signed" devenv shell -- cargo tauri build --bundles app,dmg
+APPLE_SIGNING_IDENTITY="AI Grammar Self-Signed" devenv shell -- cargo tauri build --bundles app,dmg
 # certificate leaf = H"…", the same hash for every build
 codesign -d -r- "target/release/bundle/macos/prosed.app"
 # /usr/lib/libiconv.2.dylib
