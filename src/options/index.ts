@@ -11,13 +11,17 @@ import {
   Style,
 } from "../settings";
 import { send } from "../messages";
+import { getLocale, isUiLocale, setLocale, t } from "../i18n/index.ts";
+import { localize, translateElements } from "../i18n/dom.ts";
 
-const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+const $ = <T extends HTMLElement>(id: string) =>
+  document.getElementById(id) as T;
 
-document.querySelector("main")!.dataset.theme = matchMedia("(prefers-color-scheme: dark)").matches
+document.querySelector("main")!.dataset.theme = matchMedia(
+  "(prefers-color-scheme: dark)",
+).matches
   ? "dark"
   : "light";
-$("version").textContent = `Version ${chrome.runtime.getManifest().version}`;
 
 // Accepts a pasted URL as well as a bare hostname.
 const hostnameOf = (value: string) => {
@@ -28,18 +32,18 @@ const hostnameOf = (value: string) => {
   }
 };
 
-const renderList = <T,>({
+const renderList = <T>({
   list,
   items,
   onRemove,
   text = String,
-  action = "Remove",
+  action = "remove",
 }: {
   list: HTMLUListElement;
   items: T[];
   onRemove: (item: T) => void;
   text?: (item: T) => string;
-  action?: string;
+  action?: "remove" | "restore";
 }) => {
   list.replaceChildren(
     ...items.map((item) => {
@@ -49,8 +53,13 @@ const renderList = <T,>({
       const remove = document.createElement("button");
       remove.type = "button";
       remove.className = "aig-link";
-      remove.textContent = action;
-      remove.ariaLabel = `${action} ${text(item)}`;
+      localize(remove, action, { item: text(item) });
+      localize(
+        remove,
+        action === "remove" ? "removeItem" : "restoreItem",
+        { item: text(item) },
+        "aria-label",
+      );
       remove.addEventListener("click", () => onRemove(item));
       li.append(label, remove);
       return li;
@@ -73,7 +82,7 @@ const bindAdd = ({
     e.preventDefault();
     const item = parse(input.value.trim());
     if (!item) {
-      input.setCustomValidity("That doesn't look like a site.");
+      input.setCustomValidity(t("invalidSite"));
       input.reportValidity();
       return;
     }
@@ -89,39 +98,61 @@ let switching = false;
 const renderModel = () => {
   const select = $<HTMLSelectElement>("model");
   const names = models ?? [];
-  const options = names.includes(settings.model) ? names : [settings.model, ...names];
+  const options = names.includes(settings.model)
+    ? names
+    : [settings.model, ...names];
   select.replaceChildren(
     ...options.map((name) => {
       const option = new Option(name, name, false, name === settings.model);
       if (models && !models.includes(name)) {
-        option.textContent = `${name} (not installed)`;
+        localize(option, "modelNotInstalled", { model: name });
       }
       return option;
     }),
   );
   select.disabled = switching || !models?.length;
-  $("model-status").textContent =
+  localize(
+    $("model-status"),
     models === null
-      ? ($("model-status").dataset.offline ??
-        "Ollama isn't reachable, so the extension uses the model built into Chrome. Start Ollama to pick a model here.")
+      ? $("model-status").dataset.platform === "desktop"
+        ? "modelOfflineDesktop"
+        : "modelOfflineExtension"
       : models.length === 0
-        ? "Ollama is running but has no models. Pull one with “ollama pull gemma4:e2b-it-qat”."
-        : "The Ollama model used for every check. Larger models are slower but catch more.";
+        ? "modelEmpty"
+        : "modelHint",
+  );
 };
 
 const render = () => {
+  setLocale(settings.uiLocale);
+  document.documentElement.lang = getLocale();
+  translateElements(document);
+  localize($("version"), "version", {
+    version: chrome.runtime.getManifest().version,
+  });
+  $<HTMLSelectElement>("ui-locale").value = settings.uiLocale;
+  const siteInput =
+    document.querySelector<HTMLInputElement>("#sites-form input");
+  if (siteInput?.validity.customError)
+    siteInput.setCustomValidity(t("invalidSite"));
   renderModel();
   renderList({
     list: $("dictionary"),
     items: settings.dictionary,
-    onRemove: (word) => saveSettings({ dictionary: settings.dictionary.filter((w) => w !== word) }),
+    onRemove: (word) =>
+      saveSettings({
+        dictionary: settings.dictionary.filter((w) => w !== word),
+      }),
   });
   renderList({
     list: $("ignored"),
     items: settings.ignored,
-    text: ({ from, to }) => `${from || "(nothing)"} → ${to || "(nothing)"}`,
-    action: "Restore",
-    onRemove: (change) => saveSettings({ ignored: settings.ignored.filter((c) => !sameChange(c, change)) }),
+    text: ({ from, to }) => `${from || t("nothing")} → ${to || t("nothing")}`,
+    action: "restore",
+    onRemove: (change) =>
+      saveSettings({
+        ignored: settings.ignored.filter((c) => !sameChange(c, change)),
+      }),
   });
   for (const select of styleSelects) {
     select.value = settings.style[select.name as keyof Style];
@@ -131,12 +162,23 @@ const render = () => {
     renderList({
       list: $("sites"),
       items: settings.disabledSites,
-      onRemove: (site) => saveSettings({ disabledSites: settings.disabledSites.filter((s) => s !== site) }),
+      onRemove: (site) =>
+        saveSettings({
+          disabledSites: settings.disabledSites.filter((s) => s !== site),
+        }),
     });
   }
 };
 
-const styleSelects = document.querySelectorAll<HTMLSelectElement>("#style select");
+const styleSelects =
+  document.querySelectorAll<HTMLSelectElement>("#style select");
+$<HTMLSelectElement>("ui-locale").addEventListener("change", (e) => {
+  const uiLocale = (e.target as HTMLSelectElement).value;
+  if (isUiLocale(uiLocale)) void saveSettings({ uiLocale });
+});
+window.addEventListener("languagechange", () => {
+  if (settings) render();
+});
 for (const select of styleSelects) {
   select.addEventListener("change", () =>
     saveSettings({ style: { ...settings.style, [select.name]: select.value } }),
@@ -150,7 +192,7 @@ $<HTMLSelectElement>("model").addEventListener("change", async (e) => {
   const load = $("model-load");
   load.hidden = false;
   load.dataset.state = "loading";
-  load.textContent = `Loading ${to}…`;
+  localize(load, "modelLoading", { model: to });
   switching = true;
   select.disabled = true;
   await saveSettings({ model: to });
@@ -163,10 +205,17 @@ $<HTMLSelectElement>("model").addEventListener("change", async (e) => {
   select.disabled = false;
   if (response && "ok" in response) {
     load.dataset.state = "ready";
-    load.textContent = `${to} is loaded. Checks use it from now on.`;
+    localize(load, "modelLoaded", { model: to });
   } else {
     load.dataset.state = "error";
-    load.textContent = `Couldn't load ${to}${response ? `: ${response.error}` : "."}`;
+    const detail = response
+      ? document.createTextNode(` ${response.error}`)
+      : "";
+    load.replaceChildren(
+      localize(document.createElement("span"), "modelFailed", { model: to }),
+      detail,
+    );
+    load.removeAttribute("data-i18n");
   }
 });
 bindAdd({

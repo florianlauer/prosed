@@ -1,6 +1,7 @@
 // User settings, in chrome.storage.sync so they follow the browser account without a server.
 // ponytail: sync storage caps an item at 8 KB, a few hundred dictionary words or ignored
 // changes; move those lists to storage.local if people outgrow that.
+import { isUiLocale, type UiLocale } from "./i18n/index.ts";
 
 // A change as whole words, e.g. "review" → "révision".
 export type Change = { from: string; to: string };
@@ -14,6 +15,7 @@ export type Style = {
 };
 
 export type Settings = {
+  uiLocale: UiLocale;
   // Picked with bench/grammar-bench.mjs: best accuracy on French typos under 5 GB.
   model: string;
   // Words the extension never changes, matched as whole words with their exact case.
@@ -26,6 +28,7 @@ export type Settings = {
 };
 
 export const defaultSettings: Settings = {
+  uiLocale: "system",
   model: "gemma4:e2b-it-qat",
   dictionary: [],
   disabledSites: [],
@@ -36,7 +39,12 @@ export const defaultSettings: Settings = {
 export const loadSettings = async (): Promise<Settings> => {
   const stored = (await chrome.storage.sync.get(defaultSettings)) as Partial<Settings>;
   // merged so a style option added later gets its default
-  return { ...defaultSettings, ...stored, style: { ...defaultSettings.style, ...stored.style } };
+  return {
+    ...defaultSettings,
+    ...stored,
+    uiLocale: isUiLocale(stored.uiLocale) ? stored.uiLocale : "system",
+    style: { ...defaultSettings.style, ...stored.style },
+  };
 };
 
 export const saveSettings = (changes: Partial<Settings>) =>

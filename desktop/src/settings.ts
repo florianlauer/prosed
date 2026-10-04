@@ -4,6 +4,8 @@ import "../../src/options/index.ts";
 import "./settings.css";
 import { invoke } from "@tauri-apps/api/core";
 import { getConfig, onConfig, saveConfig, type App, type Config } from "./api.ts";
+import { getLocale, setLocale, t } from "../../src/i18n/index.ts";
+import { localize, translateElements } from "../../src/i18n/dom.ts";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -55,9 +57,9 @@ const renderApps = () => {
       const remove = Object.assign(document.createElement("button"), {
         type: "button",
         className: "aig-link",
-        textContent: "Remove",
-        ariaLabel: `Remove ${app.name || app.id}`,
       });
+      localize(remove, "remove", { item: app.name || app.id });
+      localize(remove, "removeItem", { item: app.name || app.id }, "aria-label");
       remove.addEventListener("click", () => setApp(app, false, true));
       const item = document.createElement("li");
       item.append(label, id, remove);
@@ -72,6 +74,10 @@ const renderApps = () => {
 };
 
 const render = () => {
+  setLocale(config.core?.uiLocale);
+  document.documentElement.lang = getLocale();
+  translateElements(document);
+  void invoke("set_ui_labels", { settings: `${t("settings")}…`, quit: t("quit") }).catch(console.error);
   $<HTMLInputElement>("check").checked = config.checkAsYouType;
   $<HTMLInputElement>("shortcut-enabled").checked = config.shortcutEnabled;
   $<HTMLInputElement>("shortcut").value = config.shortcut;
@@ -111,6 +117,7 @@ onConfig((c) => {
   }
 });
 render();
+window.addEventListener("languagechange", render);
 loadRunning();
 // apps opened since, and access granted in System Settings, outside this window
 window.addEventListener("focus", loadRunning);
