@@ -28,7 +28,7 @@ export const grammarPrompt = (text: string, settings: Settings) =>
 
 export const rewriteSchema = {
   type: "object",
-  properties: { variants: { type: "array", items: { type: "string" } } },
+  properties: { variants: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 } },
   required: ["variants"],
 };
 
@@ -90,7 +90,7 @@ export const rewritePrompt = ({
   const who = natural && writer?.language
     ? `The text below seems to be written in English by a native ${writer.language} speaker. `
     : "";
-  return `${who}Rewrite ${what} ${tones[tone].instruction}. Give 3 different versions.${
+  return `${who}Rewrite ${what} ${tones[tone].instruction}. Return a JSON object with a "variants" array containing exactly 3 strings, one complete version per string. Do not combine versions in one string or add labels such as "Version 1".${
     language
       ? ` The text is in ${language}: write every version in ${language}.`
       : " Write every version in the language of the text."

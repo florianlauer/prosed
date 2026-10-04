@@ -12,8 +12,9 @@ import {
 } from "../settings";
 import { formalityLevels, Tone, tones } from "../prompts";
 import { formality, rewrite, tonesFor, type Generate, type Rewrite } from "../check";
-import { send } from "../messages";
+import { send, type Message } from "../messages";
 import { CheckSession } from "../session";
+import { GEMINI_MODEL } from "../gemini";
 import {
   changeOf,
   dictionaryCandidate,
@@ -24,6 +25,13 @@ import {
   wordCount,
 } from "./text";
 import { checkIcon, createDiff, powerIcon, rewriteIcon, spinnerIcon } from "./render";
+import { siteHostname } from "./site";
+
+const hostname = siteHostname({
+  href: location.href,
+  ancestorOrigins: Array.from(location.ancestorOrigins),
+  referrer: document.referrer,
+});
 
 // Kept current by main(); read at event time so changes in the options page apply at once.
 let settings: Settings = defaultSettings;
@@ -169,8 +177,14 @@ const gemini: Provider = {
       data: { text: prompt, responseConstraint: schema },
     });
 
+    if (response === null) {
+      throw new DOMException("The check was cancelled.", "AbortError");
+    }
     if (!response) {
       throw new Error("Make sure that Gemini is working");
+    }
+    if (typeof response !== "string") {
+      throw new Error(response.error);
     }
     return JSON.parse(response);
   },
@@ -229,7 +243,7 @@ const isTextArea = (
   return (
     ((node instanceof HTMLElement && node.contentEditable === "true") ||
       node instanceof HTMLTextAreaElement) &&
-    (node.spellcheck || spellcheckOffAllowed.includes(location.hostname))
+    (node.spellcheck || spellcheckOffAllowed.includes(hostname))
   );
 };
 
@@ -326,8 +340,8 @@ class Tooltip {
     const siteOff = document.createElement("button");
     siteOff.type = "button";
     siteOff.className = "aig-link";
-    siteOff.textContent = `Turn off on ${location.hostname}`;
-    siteOff.addEventListener("click", () => void disableSite(location.hostname));
+    siteOff.textContent = `Turn off on ${hostname}`;
+    siteOff.addEventListener("click", () => void disableSite(hostname));
     foot.append(settingsLink, siteOff);
 
     this.#tooltip.append(head, this.#body, foot);
@@ -1593,9 +1607,9 @@ const logSkipped = (target: EventTarget, event: string) => {
   }
 };
 
-const siteDisabled = () => settings.disabledSites.includes(location.hostname);
+const siteDisabled = () => settings.disabledSites.includes(hostname);
 
-const inputListener = (provider: Provider | null) => async (e: Event) => {
+const inputListener = (provider: () => Provider | null) => async (e: Event) => {
   const target = e.target;
   if (siteDisabled()) {
     return;
@@ -1619,11 +1633,11 @@ const inputListener = (provider: Provider | null) => async (e: Event) => {
   control?.destroy();
 
   debug("input: checking", describe(unit));
-  control = new Control(unit, provider);
+  control = new Control(unit, provider());
   control.update();
 };
 
-const focusListener = (provider: Provider | null) => async (e: Event) => {
+const focusListener = (provider: () => Provider | null) => async (e: Event) => {
   const target = e.target;
   if (siteDisabled()) {
     return;
@@ -1643,13 +1657,13 @@ const focusListener = (provider: Provider | null) => async (e: Event) => {
   control?.destroy();
 
   debug("focus: checking", describe(unit));
-  control = new Control(unit, provider);
+  control = new Control(unit, provider());
   control.update();
 };
 
 const targets = new Set<HTMLTextAreaElement | HTMLElement>();
 
-const updateTargets = (provider: Provider | null) => {
+const updateTargets = (provider: () => Provider | null) => {
   for (const target of targets) {
     if (!document.body.contains(target)) {
       targets.delete(target);
@@ -1673,30 +1687,61 @@ const updateTargets = (provider: Provider | null) => {
 
 const main = async () => {
   settings = await loadSettings();
+  let provider: Provider | null = null;
+  let selection = 0;
+  const currentProvider = () => provider;
+  const resetControl = () => {
+    control?.destroy();
+    control = null;
+  };
+  const selectProvider = async () => {
+    const request = ++selection;
+    resetControl();
+    provider = null;
+    const model = settings.model;
+    const candidates = model === GEMINI_MODEL ? [gemini] : [ollama, gemini];
+    let selected: Provider | null = null;
+    for (const candidate of candidates) {
+      if (await candidate.isSupported()) {
+        selected = candidate;
+        break;
+      }
+    }
+    if (selection !== request) return;
+    provider = selected;
+    resetControl();
+    debug("provider", provider?.name ?? "none");
+    const target = document.activeElement;
+    const unit =
+      target && isTextArea(target) && !siteDisabled()
+        ? checkUnit(target)
+        : null;
+    if (unit) {
+      control = new Control(unit, provider);
+      control.update();
+    }
+  };
+  chrome.runtime.onMessage.addListener((message: Message) => {
+    if (message.type === "gemini.ready" && settings.model === GEMINI_MODEL) {
+      void selectProvider();
+    }
+  });
   onSettingsChange((next) => {
+    const modelChanged = next.model !== settings.model;
     const filtersChanged =
       JSON.stringify([next.dictionary, next.ignored]) !==
       JSON.stringify([settings.dictionary, settings.ignored]);
     settings = next;
+    if (modelChanged) void selectProvider();
     if (siteDisabled()) {
       control?.destroy();
       control = null;
-    } else if (filtersChanged) {
+    } else if (filtersChanged && !modelChanged) {
       control?.refresh();
     }
   });
 
-  const providers = [ollama, gemini];
-
-  let provider: Provider | null = null;
-
-  for (let p of providers) {
-    if (await p.isSupported()) {
-      provider = p;
-      break;
-    }
-  }
-  debug("provider", provider?.name ?? "none");
+  await selectProvider();
 
   const observer = new MutationObserver(() => {
     if (control?.textArea && !document.body.contains(control?.textArea)) {
@@ -1705,11 +1750,11 @@ const main = async () => {
       control = null;
     }
 
-    updateTargets(provider);
+    updateTargets(currentProvider);
   });
   observer.observe(document, { childList: true, subtree: true });
 
-  updateTargets(provider);
+  updateTargets(currentProvider);
 };
 
 main();

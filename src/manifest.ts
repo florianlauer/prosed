@@ -31,6 +31,7 @@ export default defineManifest({
   content_scripts: [
     {
       all_frames: true,
+      match_about_blank: true,
       run_at: "document_end",
       matches: ["<all_urls>"],
       js: ["src/contentScript/index.ts"],
