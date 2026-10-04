@@ -18,7 +18,7 @@
   width: 16px;
   height: 16px;
   margin: 0;
-  accent-color: var(--aig-add-ink);
+  accent-color: var(--aig-ink);
 }
 
 .opt__row input.opt__field {
