@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <mask id="cut">
+    <rect width="1024" height="1024" fill="#fff"/>
+    <rect x="432" y="80" width="160" height="864" rx="40" fill="#000"/>
+  </mask>
+  <path mask="url(#cut)" d="M70 560 q110 -210 220 0 t220 0 t220 0 t220 0" fill="none" stroke="#000" stroke-width="150" stroke-linecap="round"/>
+  <rect x="472" y="110" width="80" height="804" rx="30" fill="#000"/>
+</svg>

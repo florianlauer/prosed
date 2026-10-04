@@ -1,8 +1,12 @@
-# ai-grammar
+<p align="center"><img src="./assets/brand/prosed.svg" alt="" width="96" height="96"></p>
 
-A free, open source grammar checker for Chromium browsers. It runs a language model on your own machine, so the text you type never leaves it.
+# prosed
 
-This is a fork of [nucleartux/ai-grammar](https://github.com/nucleartux/ai-grammar). It works more like Grammarly: mistakes are underlined in place, one click fixes one word, and the default model is small enough to leave running all day. The [Chrome Web Store version](https://chromewebstore.google.com/detail/free-ai-grammar-checker/jnkjkpapplndagboidnhphaciphgjeca) is the upstream one and has none of these changes, so you install this fork [from a release zip or from source](#install-the-extension).
+`sed for your prose.`
+
+A grammar checker that runs on your machine. It works in Chromium browsers, and a [desktop app](#desktop-app) brings it to every app on macOS and Windows. A language model on your own computer reads what you type, so the text never leaves it.
+
+Mistakes are underlined in place, one click fixes one word, and the default model is small enough to leave running all day. It's free, open source, and has no account. You install it [from a release zip or from source](#install-the-extension).
 
 | Fix one word | Review every suggestion |
 | :---: | :---: |
@@ -12,7 +16,7 @@ This is a fork of [nucleartux/ai-grammar](https://github.com/nucleartux/ai-gramm
 ## Contents
 
 - [What it does](#what-it-does)
-- [What this fork changes](#what-this-fork-changes)
+- [Compared to the original extension](#compared-to-the-original-extension)
 - [Requirements](#requirements)
 - [Install the extension](#install-the-extension)
   - [One line agent install](#one-line-agent-install)
@@ -37,7 +41,7 @@ You type in a text field. When you stop for half a second, the extension sends t
 - The model runs on your machine: [Ollama](https://ollama.com) or Chrome's built-in Gemini Nano.
 - It reads whole sentences, so it catches agreement errors and homophones ("sa" / "ça", "on" / "ont") that a word-by-word spell checker misses.
 
-## What this fork changes
+## Compared to the original extension
 
 - Mistakes are underlined inside the field, in both `<textarea>` and `contenteditable` elements.
 - Hovering an underlined word opens a card with its fix. Clicking the fix replaces that word and nothing else.
@@ -77,15 +81,15 @@ There are three ways. An agent can do it for you. The zip needs nothing but the 
 If you use a coding agent with shell access (Claude Code, Codex, Cursor and the like), paste this into it:
 
 ```text
-Install the ai-grammar browser extension on this machine by following https://raw.githubusercontent.com/florianlauer/ai-grammar/main/AGENT_INSTALL.md
+Install the prosed browser extension on this machine by following https://raw.githubusercontent.com/florianlauer/prosed/main/AGENT_INSTALL.md
 ```
 
-The agent checks or installs Ollama, downloads the model, sets `OLLAMA_ORIGINS`, checks that Ollama accepts the extension, and unzips the latest release into `~/Extensions/ai-grammar`. It asks before installing software, using `sudo` or changing how Ollama starts. You still load the extension in the browser yourself, and the agent tells you what to click. [AGENT_INSTALL.md](./AGENT_INSTALL.md) lists every step it follows.
+The agent checks or installs Ollama, downloads the model, sets `OLLAMA_ORIGINS`, checks that Ollama accepts the extension, and unzips the latest release into `~/Extensions/prosed`. It asks before installing software, using `sudo` or changing how Ollama starts. You still load the extension in the browser yourself, and the agent tells you what to click. [AGENT_INSTALL.md](./AGENT_INSTALL.md) lists every step it follows.
 
 ### From a release zip
 
-1. Download `AI-Grammar-Checker-<version>.zip` from the [latest release](https://github.com/florianlauer/ai-grammar/releases/latest).
-2. Unzip it into a folder you'll keep, for example `~/Extensions/ai-grammar`. The browser loads the extension from that folder every time it starts, so don't unzip it in Downloads and then clean Downloads up.
+1. Download `prosed-<version>.zip` from the [latest release](https://github.com/florianlauer/prosed/releases/latest).
+2. Unzip it into a folder you'll keep, for example `~/Extensions/prosed`. The browser loads the extension from that folder every time it starts, so don't unzip it in Downloads and then clean Downloads up.
 3. Open the extensions page of your browser: `chrome://extensions`, `arc://extensions`, `edge://extensions` or `brave://extensions`.
 4. Turn on "Developer mode".
 5. Click "Load unpacked" and pick the unzipped folder. It is the one that contains `manifest.json`.
@@ -98,8 +102,8 @@ Browsers can't install the zip itself, and an unpacked extension doesn't update 
 1. Get the code and build it:
 
 ```shell
-git clone https://github.com/florianlauer/ai-grammar.git
-cd ai-grammar
+git clone https://github.com/florianlauer/prosed.git
+cd prosed
 npm install
 npm run build
 ```
@@ -381,7 +385,7 @@ Small models sometimes do. Don't click that suggestion, or undo it with Cmd+Z / 
 <details>
 <summary>Something else is off and you want to see what the extension does</summary>
 
-Open the browser console on that site and run `localStorage.setItem("ai-grammar:debug", "1")`. You don't need the caret in the text field for this. Reload the tab and type in the field. The console then logs, with an `[ai-grammar]` prefix, which fields the extension watches, which one it checks or skips and why, which model it uses, and each state change. Include those lines when you [open an issue](https://github.com/florianlauer/ai-grammar/issues/new). `localStorage.removeItem("ai-grammar:debug")` turns it off.
+Open the browser console on that site and run `localStorage.setItem("prosed:debug", "1")`. You don't need the caret in the text field for this. Reload the tab and type in the field. The console then logs, with a `[prosed]` prefix, which fields the extension watches, which one it checks or skips and why, which model it uses, and each state change. Include those lines when you [open an issue](https://github.com/florianlauer/prosed/issues/new). `localStorage.removeItem("prosed:debug")` turns it off.
 
 </details>
 
@@ -474,7 +478,7 @@ To publish a release, bump `version` in `package.json`, add an entry to `CHANGEL
 
 ```shell
 npm run zip
-gh release create v<version> package/AI-Grammar-Checker-<version>.zip --notes-file <notes>
+gh release create v<version> package/prosed-<version>.zip --notes-file <notes>
 ```
 
 ## Desktop app
@@ -487,6 +491,6 @@ The extension sends the text of the field you're typing in to `http://127.0.0.1:
 
 ## Credits and license
 
-The original extension is by Igor Adrov ([nucleartux](https://github.com/nucleartux)). If you find it useful, consider [sponsoring the upstream project](https://github.com/sponsors/nucleartux). This fork keeps its MIT [license](./LICENSE).
+prosed started as a fork of [nucleartux/ai-grammar](https://github.com/nucleartux/ai-grammar) by Igor Adrov. The [Chrome Web Store version](https://chromewebstore.google.com/detail/free-ai-grammar-checker/jnkjkpapplndagboidnhphaciphgjeca) is that original extension and has none of the changes above. If you find prosed useful, consider [sponsoring the upstream project](https://github.com/sponsors/nucleartux). prosed keeps its MIT [license](./LICENSE).
 
-Issues about this fork's changes go [here](https://github.com/florianlauer/ai-grammar/issues).
+Issues go [here](https://github.com/florianlauer/prosed/issues).

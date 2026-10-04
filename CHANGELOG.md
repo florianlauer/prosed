@@ -1,7 +1,14 @@
 # CHANGELOG
 
-## Unreleased
+## 0.11.0 [2026.10.03]
 
+- feat: the project is now called prosed, with its own icon, colors and type. The settings page uses IBM Plex, bundled with the extension
+- docs: the release zip is now `prosed-0.11.0.zip`. To update, unzip it over the folder the extension already loads from, even if it's called `ai-grammar`: Chrome ties an unpacked extension's settings to its folder, so a new folder starts with an empty dictionary, no ignored changes and default style choices
+- docs: if you built the desktop app from source before this release, its identifier is now `com.florianlauer.prosed` and it starts with default settings. To keep yours, quit the old app and move its config folder before launching prosed. If prosed already ran once, delete its new config folder first, or the move nests the old one inside it:
+  - macOS: `mv ~/Library/Application\ Support/com.florianlauer.ai-grammar ~/Library/Application\ Support/com.florianlauer.prosed`. macOS asks for the Accessibility permission again once
+  - Windows: uninstall "AI Grammar" first, then `move "%APPDATA%\com.florianlauer.ai-grammar" "%APPDATA%\com.florianlauer.prosed"`
+- breaking: the debug switch is now `localStorage["prosed:debug"] = "1"`
+- feat: the desktop app's menu bar icon is monochrome and follows the menu bar's light or dark look on macOS
 - feat: desktop app for macOS and Windows in `desktop/`: underlines mistakes in the focused field of any app, and rewrites the selection with a shortcut (off by default). Each app can be turned off in its settings
 - docs: `desktop/LINUX.md`, what a Linux version could do on X11 and on Wayland
 - fix: without Ollama, a Chrome that can't run Gemini Nano now says "AI is not supported" instead of "Make sure that Gemini is working"

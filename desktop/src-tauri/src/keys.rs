@@ -35,7 +35,7 @@ fn command(letter: char) -> bool {
 // Copies the selection of the frontmost app. A marker in the clipboard tells an empty
 // selection from a slow app; the user's clipboard comes back afterwards (see `Saved`).
 pub fn copy_selection() -> Option<String> {
-    const MARKER: &str = "\u{2063}ai-grammar\u{2063}";
+    const MARKER: &str = "\u{2063}prosed\u{2063}";
     let mut clipboard = arboard::Clipboard::new().ok()?;
     let previous = Saved::take(&mut clipboard)?;
     clipboard.set_text(MARKER).ok()?;

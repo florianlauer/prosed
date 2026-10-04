@@ -1,8 +1,8 @@
-# Installing ai-grammar for a user
+# Installing prosed for a user
 
-You are installing the ai-grammar browser extension on the user's machine, with a local Ollama model behind it. Work through the steps in order. Each step ends on a check. Move to the next step only once the check passes.
+You are installing the prosed browser extension on the user's machine, with a local Ollama model behind it. Work through the steps in order. Each step ends on a check. Move to the next step only once the check passes.
 
-The [README](https://raw.githubusercontent.com/florianlauer/ai-grammar/main/README.md) is the source of truth for platform commands. Fetch it when a step points to one of its sections.
+The [README](https://raw.githubusercontent.com/florianlauer/prosed/main/README.md) is the source of truth for platform commands. Fetch it when a step points to one of its sections.
 
 Ask the user before you install or upgrade software, run anything with `sudo`, or change how a background service starts. Say what you are about to run and why, then wait for a yes. Read-only checks need no confirmation.
 
@@ -56,26 +56,29 @@ Check: it prints `200`. `403` means the running server doesn't have the variable
 
 ## 5. Download the extension
 
-Put it in a folder the user will keep. The browser loads the extension from that folder on every start. Use `~/Extensions/ai-grammar` on macOS and Linux, `%USERPROFILE%\Extensions\ai-grammar` on Windows. If the folder exists, this is an update: replace its contents.
+Put it in a folder the user will keep. The browser loads the extension from that folder on every start. Use `~/Extensions/prosed` on macOS and Linux, `%USERPROFILE%\Extensions\prosed` on Windows. If the folder exists, this is an update: replace its contents. Installs from before the rename live in `~/Extensions/ai-grammar` (`%USERPROFILE%\Extensions\ai-grammar`). If that folder exists, use it instead and keep its name: the browser ties the extension's settings to the folder, so a new folder starts with an empty dictionary.
 
 macOS and Linux:
 
 ```shell
-url=$(curl -s https://api.github.com/repos/florianlauer/ai-grammar/releases/latest | grep -o '"browser_download_url": *"[^"]*\.zip"' | cut -d'"' -f4)
-mkdir -p ~/Extensions/ai-grammar
-curl -sL "$url" -o /tmp/ai-grammar.zip
-unzip -o /tmp/ai-grammar.zip -d ~/Extensions/ai-grammar
+url=$(curl -s https://api.github.com/repos/florianlauer/prosed/releases/latest | grep -o '"browser_download_url": *"[^"]*\.zip"' | cut -d'"' -f4)
+dest=~/Extensions/prosed
+[ -d ~/Extensions/ai-grammar ] && dest=~/Extensions/ai-grammar
+mkdir -p "$dest"
+curl -sL "$url" -o /tmp/prosed.zip
+unzip -o /tmp/prosed.zip -d "$dest"
 ```
 
 Windows (PowerShell):
 
 ```powershell
-$release = Invoke-RestMethod https://api.github.com/repos/florianlauer/ai-grammar/releases/latest
+$release = Invoke-RestMethod https://api.github.com/repos/florianlauer/prosed/releases/latest
 $asset = $release.assets | Where-Object name -like '*.zip' | Select-Object -First 1
-$dest = "$env:USERPROFILE\Extensions\ai-grammar"
+$dest = "$env:USERPROFILE\Extensions\prosed"
+if (Test-Path "$env:USERPROFILE\Extensions\ai-grammar") { $dest = "$env:USERPROFILE\Extensions\ai-grammar" }
 New-Item -ItemType Directory -Force $dest | Out-Null
-Invoke-WebRequest $asset.browser_download_url -OutFile "$env:TEMP\ai-grammar.zip"
-Expand-Archive "$env:TEMP\ai-grammar.zip" -DestinationPath $dest -Force
+Invoke-WebRequest $asset.browser_download_url -OutFile "$env:TEMP\prosed.zip"
+Expand-Archive "$env:TEMP\prosed.zip" -DestinationPath $dest -Force
 ```
 
 Check: `manifest.json` sits directly in that folder, not in a subfolder.
@@ -86,10 +89,10 @@ The browser keeps extension loading behind a manual switch, so the user does thi
 
 1. Open `chrome://extensions` (Arc: `arc://extensions`, Edge: `edge://extensions`, Brave: `brave://extensions`).
 2. Turn on "Developer mode".
-3. Click "Load unpacked" and pick the folder from step 5. On macOS, Cmd+Shift+G in the file picker accepts a typed path. On an update, click the reload icon on the existing "AI Grammar Checker" card instead.
+3. Click "Load unpacked" and pick the folder from step 5. On macOS, Cmd+Shift+G in the file picker accepts a typed path. On an update, click the reload icon on the existing card instead. A card from before the rename still says "AI Grammar Checker" until it is reloaded.
 4. Reload any tab that was open before.
 
-Check: the user confirms an "AI Grammar Checker" card is on the extensions page with no error.
+Check: the user confirms a "prosed" card is on the extensions page with no error.
 
 ## 7. Try it
 

@@ -98,7 +98,7 @@ export const rewritePrompt = ({
     context
       ? " Each version replaces only this part, so it must fit between the words before and after it: don't repeat them, and don't start a new sentence."
       : ""
-  } Keep the meaning, and every name, number and link. Don't add placeholders, brackets or notes. Fix any mistakes along the way.${hints}${settingsRules(settings)}\n\n${
+  } Keep the meaning, and every name, acronym, number and link as written. Don't add placeholders, brackets or notes. Fix any mistakes along the way.${hints}${settingsRules(settings)}\n\n${
     context ? `Before: ${context.before}\nAfter: ${context.after}\n\nPart to rewrite:` : "Text:"
   }\n${text}`;
 };

@@ -17,7 +17,7 @@ export default defineManifest({
   },
   permissions: ["storage"],
   action: {
-    default_title: "AI Grammar settings",
+    default_title: "prosed settings",
     default_icon: {
       16: "img/icon16.png",
       32: "img/icon32.png",

@@ -1,27 +1,20 @@
-# Extension Privacy Policy
+# prosed privacy policy
 
-## Intro
+prosed collects nothing. It has no account, no analytics and no server.
 
-Different extensions use personal data in different ways. This privacy policy encompasses general principles of how extensions I create collect and handle personal data. Individual extensions, when you first use them, will display their own unique privacy policies and ask you to agree to them before continued use.
+## Where your text goes
 
-## Data Collection
+When you type, prosed sends the text of the field you're in to one place: the Ollama server on your own machine (`http://127.0.0.1:11434`), or Chrome's on-device model when you use that instead. Nothing else, nowhere else.
 
-None of the extensions I write collect any data at all. Since no data is collected, it stands to reason, and is, indeed, the case, that none of your data can be sold to third parties.
+## Where your settings live
 
-## Third-Party APIs
+- Extension: in the browser's extension storage. When browser sync is on, the browser syncs it to your account like bookmarks.
+- Desktop app: in `config.json` in the app's config folder (`~/Library/Application Support/com.florianlauer.prosed/` on macOS, `%APPDATA%\com.florianlauer.prosed\` on Windows).
 
-No third party APIs are used by any of my extensions.
+## Third parties
 
-## Changes to the Privacy Policy
+prosed uses no third-party API. Its fonts ship inside the extension and the app, so opening the settings doesn't contact a font service either.
 
-If there are substantive<sup>1</sup> changes made to this blanket privacy policy or to the individual privacy policies of any of my extensions, I will push out a new version of the affected extension(s) and ask you to agree to the amended privacy policy.
+## Changes
 
-## Feedback
-
-If you have questions or concerns about this privacy policy, feel free to [send me an email](mailto:nucleartux@gmail.com) or [file an issue](https://github.com/nucleartux/ai-grammar/issues/new) to this repository.
-
----
-
-#### Notes:
-
-1 - When I say "substantive," I mean that I won't push out app updates for minor changes like fixing a typo.
+If this policy changes, the new version ships with a release and the CHANGELOG says so.

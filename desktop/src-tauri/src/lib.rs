@@ -648,7 +648,7 @@ pub fn run() {
             floating_window(&handle, "overlay", "overlay.html", true)?;
             floating_window(&handle, "card", "card.html", false)?;
             let settings = tauri::WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("index.html".into()))
-                .title("AI Grammar")
+                .title("prosed")
                 .inner_size(600.0, 760.0)
                 .visible(false)
                 .build()?;
@@ -676,12 +676,18 @@ pub fn run() {
                 app,
                 &[
                     &MenuItem::with_id(app, "settings", "Settings…", true, None::<&str>)?,
-                    &MenuItem::with_id(app, "quit", "Quit AI Grammar", true, None::<&str>)?,
+                    &MenuItem::with_id(app, "quit", "Quit prosed", true, None::<&str>)?,
                 ],
             )?;
-            TrayIconBuilder::new()
-                .icon(app.default_window_icon().expect("the bundle has an icon").clone())
-                .tooltip("AI Grammar")
+            let tray = TrayIconBuilder::new();
+            // a template image: macOS draws it black or white to match the menu bar
+            #[cfg(target_os = "macos")]
+            let tray = tray
+                .icon(tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))?)
+                .icon_as_template(true);
+            #[cfg(not(target_os = "macos"))]
+            let tray = tray.icon(app.default_window_icon().expect("the bundle has an icon").clone());
+            tray.tooltip("prosed")
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "settings" => open_settings(app),

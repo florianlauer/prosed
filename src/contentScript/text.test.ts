@@ -28,7 +28,7 @@ test("dictionary matches whole words with their exact case", () => {
 });
 
 test("an insertion inside a dictionary word is refused", () => {
-  assert.equal(keepUserText("le repo ai-grammar", "le repo ai-grammmar", ["ai-grammar"]), "le repo ai-grammar");
+  assert.equal(keepUserText("le repo prosed", "le repo prossed", ["prosed"]), "le repo prosed");
 });
 
 test("typographic variants are not suggestions", () => {

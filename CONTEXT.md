@@ -1,4 +1,4 @@
-# AI Grammar
+# prosed
 
 A grammar checker and rewriter that runs on a local model. The browser extension and the desktop app are two hosts for the same checks.
 

@@ -1,6 +1,6 @@
 // Checks the accessibility layer against a running app, without the UI:
 //   cargo run --example probe -- <pid> <word> [replacement]
-use ai_grammar_desktop_lib::platform::{self, Platform};
+use prosed_lib::platform::{self, Platform};
 
 fn main() {
     let mut args = std::env::args().skip(1);
