@@ -94,7 +94,13 @@ export const rewrite = async ({
     prompt: rewritePrompt({ ...request, settings }),
     schema: rewriteSchema,
   });
-  return { variants: keep(rewriteOutput.parse(json).variants, settings.dictionary), notes: falseFriends };
+  let variants = rewriteOutput.parse(json).variants;
+  // Some models put the numbered alternatives inside a single array item.
+  if (variants.length === 1 && !/\bVersion\s+[123]\s*:/i.test(text)) {
+    const bundled = variants[0].trim().match(/^Version\s+1\s*:\s*([\s\S]+?)\s+Version\s+2\s*:\s*([\s\S]+?)\s+Version\s+3\s*:\s*([\s\S]+)$/i);
+    if (bundled) variants = bundled.slice(1);
+  }
+  return { variants: keep(variants, settings.dictionary), notes: falseFriends };
 };
 
 // How formal the text sounds, 1 to 5, on its own channel so it doesn't cancel the rewrite.

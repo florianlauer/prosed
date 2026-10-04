@@ -51,18 +51,18 @@ You type in a text field. When you stop for half a second, the extension sends t
 - Ollama uses `gemma4:e2b-it-qat` by default. It fixed every case in the [benchmark](#benchmark), in about half a second.
 - The extension asks Ollama to keep the model loaded, so checks don't pay a loading delay after a pause.
 - The overlays pick a light or dark look from the text color of the field, and respect `prefers-reduced-motion`.
-- A settings page picks the Ollama model, holds a personal dictionary of words to leave alone, and turns the extension off on chosen sites.
+- A settings page picks an Ollama model or Chrome's built-in Gemini Nano, holds a personal dictionary of words to leave alone, and turns the extension off on chosen sites.
 - Select some text, or hover a sentence longer than 30 words, to get three rewrites of it. Rewrites are drawn in violet, apart from the red fixes, and a variant that drops a number, a name or a link is never shown.
 - "Ignore" on a suggestion refuses that change for good, on every site. The settings list the ignored changes and set a few style preferences: "tu" or "vous", US or UK spelling, and whether informal words count as mistakes.
 - The Ollama request passes a real JSON schema. Upstream passed a zod object, which recent Ollama servers reject with a 500.
 
 ## Requirements
 
-You need one of the two model setups below. If both are available, the extension uses Ollama.
+You need one of the two model setups below. The extension uses Ollama by default. You can choose Gemini Nano in the settings even when Ollama is running.
 
 | | Ollama (recommended) | Chrome built-in AI |
 | --- | --- | --- |
-| Browser | Any Chromium browser that loads unpacked extensions: Chrome, Arc, Edge, Brave | Google Chrome 138 or newer. Other Chromium browsers don't ship the model |
+| Browser | Desktop Chromium browsers that load unpacked extensions | Google Chrome 149 or newer for French and English; see [browser compatibility](#browser-compatibility) |
 | OS | macOS, Windows, Linux | Windows 10/11, macOS 13+, Linux, ChromeOS on Chromebook Plus |
 | Memory | 8 GB of RAM at minimum, 16 GB to stop thinking about it. The model takes 3.8 GB once loaded | 16 GB of RAM and 4 CPU cores, or a GPU with more than 4 GB of VRAM |
 | Disk | 4.3 GB for the model, plus Ollama itself | 22 GB free on the drive that holds your Chrome profile |
@@ -70,7 +70,29 @@ You need one of the two model setups below. If both are available, the extension
 
 The Chrome figures come from [Google's Prompt API docs](https://developer.chrome.com/docs/ai/prompt-api#hardware-requirements). The Ollama memory figure is what `ollama ps` reports with the model loaded. The 8 GB minimum is an estimate, not a measurement.
 
-The Ollama path is tested on a MacBook Pro M2 Pro with 32 GB of RAM, in Arc. The Chrome built-in path uses the same prompt but hasn't been tested since the fork.
+The Ollama path is tested on a MacBook Pro M2 Pro with 32 GB of RAM, in Arc. Gemini Nano checks and rewrites have also been exercised in Google Chrome on that Mac. Other browser and OS combinations haven't been validated in this project.
+
+### Browser compatibility
+
+For Gemini Nano, use Google Chrome on desktop. For another Chromium browser, use Ollama unless a real model response has been verified. The table separates browser documentation from local tests; an unverified browser is not a confirmed failure. Last reviewed on October 4, 2026.
+
+| Browser | Gemini Nano in Prosed | Recommended setup and evidence |
+| --- | --- | --- |
+| Google Chrome, desktop | Yes, on an eligible device with Chrome 149+ | Gemini Nano or Ollama. Checks and rewrites worked in Chrome 154 on macOS. [Google documents the API and device requirements](https://developer.chrome.com/docs/ai/prompt-api). |
+| Google Chrome Beta, Dev, Canary | Subject to the same API, language and device checks | Experimental releases can change behavior. These channels haven't been tested with Prosed; use the settings check before relying on Gemini. |
+| Arc, desktop | Failed on the tested macOS build using Chromium 154 | Use Ollama. Arc downloaded weights and reported availability, but returned Chromium test responses instead of running Gemini. See [the Arc diagnosis](#arc-reports-gemini-as-available-but-checks-fail). |
+| Brave, desktop | No confirmed working Gemini path in Prosed | Use Ollama. [Brave disables Optimization Guide model execution by default](https://github.com/brave/brave-core/blob/master/patches/components-optimization_guide-core-optimization_guide_features.cc.patch), and its [missing model component request](https://github.com/brave/brave-browser/issues/40599) remains open. Enabling an inherited Chrome flag doesn't establish compatibility. |
+| Microsoft Edge, Stable or Beta | No documented Gemini Nano integration | Use Ollama. Edge's own local models are separate from Google's model; Prosed hasn't been validated against them. |
+| Microsoft Edge, Dev or Canary | Its Prompt API uses other models | Use Ollama with Prosed. [Microsoft documents Phi-4-mini and experimental Aion-1.0-Instruct](https://learn.microsoft.com/en-us/microsoft-edge/web-platform/prompt-api). A compatible `LanguageModel` API doesn't identify the model as Gemini. |
+| Vivaldi, desktop | Unverified; no working Gemini setup confirmed here | Use Ollama. [Chrome extension compatibility](https://help.vivaldi.com/desktop/appearance-customization/extensions/) allows installing the extension, but doesn't establish built-in model compatibility. |
+| Opera / Opera GX, desktop | Unverified; no working Gemini setup confirmed here | Use Ollama. [Opera's Chromium extension support](https://help.opera.com/en/extensions/basics/) allows installing the extension, but doesn't establish built-in model compatibility. |
+| Chromium, including custom builds | Depends on the inference engine included in the build; unverified | Use Ollama. [Chromium falls back to a test backend when its internal model engine isn't included](https://github.com/chromium/chromium/blob/main/services/on_device_model/on_device_model_service.cc). The API can exist without real inference. |
+| Ungoogled Chromium / Helium | No working Gemini setup confirmed here | Use Ollama. These projects carry patches removing AI integrations: [Ungoogled Chromium](https://github.com/ungoogled-software/ungoogled-chromium/blob/master/patches/core/ungoogled-chromium/disable-ai.patch), [Helium](https://github.com/imputnet/helium/blob/main/patches/ungoogled-chromium/disable-ai.patch). |
+| Other Chromium browsers, including Dia, Comet and ChatGPT Atlas | Unverified | Use Ollama if the browser can load this extension. Its built-in assistant doesn't establish access to Gemini Nano through the extension API. |
+| Chrome or other browsers on Android / iOS | This Gemini setup is unavailable | [Google's foundation-model APIs are desktop-only](https://developer.chrome.com/docs/ai/get-started). The Prosed extension isn't validated on mobile. |
+| Firefox / Safari | This Chromium extension isn't supported | Use the [desktop app](#desktop-app) with Ollama. |
+
+The selector currently labels the `LanguageModel` provider "Gemini Nano · Chrome". That label isn't a model identity check in other browsers. Browser AI assistants, Chrome's Gemini side panel and cloud Gemini subscriptions are separate from the local model used by Prosed.
 
 ## Install the extension
 
@@ -256,11 +278,55 @@ The next check loads it again.
 
 ### Option B: Chrome built-in AI
 
-Use Google Chrome 138 or newer on a machine that meets the [requirements](#requirements). There is nothing to install. The first check downloads Gemini Nano in the background, which can take a while. `chrome://on-device-internals` shows the model status.
+Use Google Chrome on a machine that meets the [requirements](#requirements). Chrome 149 or newer supports both French and English, the languages requested by the extension.
+
+Open the extension's settings. When Chrome supports the model, the model selector includes "Gemini Nano · Chrome". Select it, or click "Download Gemini Nano" if a download is needed. The page shows download progress and saves your choice once the model is ready. It runs locally, without an API key. `chrome://on-device-internals` shows the model status.
+
+The settings test a model response before saving Gemini. Some browsers report the model as available but return responses from [Chromium's test backend](https://github.com/chromium/chromium/blob/main/services/on_device_model/fake/fake_chrome_ml_api.cc), as observed with Arc. Downloading the weights doesn't make that backend run Gemini. Use Google Chrome or choose an Ollama model in that case.
+
+To check support directly, open DevTools on the extension's settings page and run:
+
+```js
+typeof LanguageModel === "undefined"
+  ? "unavailable"
+  : await LanguageModel.availability({
+      expectedInputs: [{ type: "text", languages: ["en", "fr"] }],
+      expectedOutputs: [{ type: "text", languages: ["en", "fr"] }],
+    });
+```
+
+`available` means the browser reports that a session can be created. `downloadable` means additional model files are needed, and `downloading` means the download is in progress. `unavailable` means the browser, device or requested languages aren't supported. Run this in the extension's page, since access from a website can differ. Availability and a completed download alone don't prove that inference works.
+
+To verify the full path:
+
+1. Check your browser in the [compatibility table](#browser-compatibility). For Chrome, also check the OS, memory and free-space requirements. Prosed requests both English and French, which [Chrome supports from version 149](https://developer.chrome.com/docs/ai/get-started).
+2. Select Gemini in the extension settings. Prosed creates a session and tests a response before saving that choice. A failure keeps your previous model selected.
+3. Reload the extension and affected tabs after updating an unpacked build. Focus a textarea or editable field and type a sentence with a mistake. Check that Prosed produces a correction, then try a rewrite.
+
+#### Downloads and storage
+
+Chrome and Arc keep their model files in separate browser data directories. A download in Arc doesn't make the model available in Chrome. Different browsers can also choose different CPU or GPU variants. In the macOS tests, Arc downloaded about 2.86 GB and Chrome about 4.27 GB; these are observed sizes, not fixed requirements for future versions.
+
+The 22 GB figure in the requirements is the free space Chrome requires before downloading, not the model's installed size. [Chrome manages downloads, updates and removal](https://developer.chrome.com/docs/ai/understand-built-in-model-management), so the files and availability can change after installation.
+
+#### Arc reports Gemini as available but checks fail
+
+On the tested Arc build, the constrained JSON request failed with `NotSupportedError`. Retrying without the constraint returned text beginning with `CPU backend`, followed by the prompt. This matches [Chromium's fake model implementation](https://github.com/chromium/chromium/blob/main/services/on_device_model/fake/fake_chrome_ml_api.cc), which emits diagnostics and echoes input instead of generating corrections. Downloaded Gemini weights don't fix that implementation. Prosed now detects this response and tells you to use Google Chrome or Ollama.
+
+If you downloaded the model in Arc for Prosed and want to remove it:
+
+1. Choose an Ollama model in Prosed's Arc settings and reload affected tabs.
+2. Quit Arc before moving its model files, so the browser isn't using or updating them.
+3. On macOS, move `~/Library/Application Support/Arc/User Data/OptGuideOnDeviceModel` to the Trash. This is the model directory; `OnDeviceHeadSuggestModel` serves another browser feature.
+4. Empty that item from the Trash when you want to reclaim the disk space. Keep Chrome's separate model directory if you use Gemini there.
+
+Removing model files doesn't disable browser AI features. Another site or feature calling a model creation API may trigger a new download. Select Ollama rather than starting Gemini downloads again in the affected Arc build.
 
 ### Which one the extension uses
 
-When a page loads, the extension asks Ollama for its model list. If Ollama answers with at least one model, it uses Ollama. Otherwise it falls back to Chrome's built-in model. The choice holds until you reload the page. So if you start Ollama after opening a tab, reload that tab.
+If you select Gemini Nano, checks and rewrites use it even when Ollama is running. Changes in the model selector apply to tabs already open.
+
+With an Ollama model selected, the extension asks Ollama for its model list when a page loads. If Ollama answers with at least one model, it uses Ollama. Otherwise it falls back to Gemini Nano if Chrome has downloaded it. If you start Ollama after opening a tab, reload that tab.
 
 ## Using it
 
@@ -373,6 +439,8 @@ Ollama is loading the model into memory, usually a few seconds. Later checks tak
 
 Open `chrome://on-device-internals` and check that the model is downloaded and your device is marked eligible.
 
+Then select Gemini in Prosed's settings and test a correction. If you're using another Chromium browser, check the [compatibility table](#browser-compatibility). An `available` result, a model file on disk or an inherited Chrome flag doesn't prove that the browser can run Gemini. Arc's `CPU backend` response comes from a test engine; use Ollama there.
+
 </details>
 
 <details>
@@ -393,7 +461,7 @@ Open the browser console on that site and run `localStorage.setItem("prosed:debu
 
 Click the extension's toolbar icon, or "Settings" at the bottom of the suggestions panel. The page has five sections:
 
-- **Model.** The Ollama model used for every check, picked from the models Ollama has. Picking one unloads the previous model from Ollama to free its memory, then loads the new one while the page shows a loader, so the next check doesn't wait for it. No reload needed. Run the [benchmark](#benchmark) before switching: some models rewrite whole sentences, translate jargon, or add markdown around their answer. With Chrome's built-in model there is nothing to pick.
+- **Model.** In the extension, choose an installed Ollama model or Gemini Nano in a [compatible browser](#browser-compatibility). Switching Ollama models unloads the previous one and loads the next; choosing Gemini tests a response before saving it. The choice applies to open tabs. The desktop app uses Ollama. Run the [benchmark](#benchmark) before switching Ollama models: some rewrite whole sentences, translate jargon, or add markdown around their answer.
 - **Dictionary.** Words the extension never changes. Case counts: with "Sencrop" in the dictionary, "Sencrop" is kept and "sencrop" is still corrected. The prompt asks the model to leave these words alone, and the extension also drops any suggestion that touches one, because a small model doesn't follow every instruction.
 - **Style.** Three choices the model can't guess from one message. In French, address the reader as "tu" or "vous". In English, use US or UK spelling. Informal words like "du coup", "ouais" or "gonna" are kept by default, or counted as mistakes. Each choice adds one line to the prompt; with the defaults the prompt is the one the benchmark measured.
 - **Ignored changes.** Every change you refused with "Ignore". "Restore" makes the extension suggest it again.
