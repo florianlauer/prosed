@@ -1,6 +1,7 @@
 import ollama, { GenerateResponse, Ollama } from "ollama/browser";
 import type { Channel } from "../check";
 import type { Handlers, Message, Messages } from "../messages";
+import { geminiAvailability, geminiGenerate } from "../gemini";
 import { loadSettings, onSettingsChange } from "../settings.ts";
 import { setLocale, t } from "../i18n/index.ts";
 
@@ -62,23 +63,20 @@ const handlers: Handlers<keyof Messages> = {
   "ollama.switch": ({ data: { from, to } }) =>
     Promise.resolve(from && ollama.generate({ model: from, prompt: "", keep_alive: 0 }))
       .catch(() => {}) // not loaded or not installed: nothing to free
-      .then(() => ollama.generate({ model: to, prompt: "", keep_alive: -1 }))
+      .then(() => to ? ollama.generate({ model: to, prompt: "", keep_alive: -1 }) : null)
       .then(() => ({ ok: true as const }), (e) => ({ error: String(e?.message ?? e) })),
 
-  // it resolves "unavailable" rather than failing; a model still to download is fetched by the first check
-  "gemini.supported": () => LanguageModel.availability().then((a) => a !== "unavailable", () => false),
+  "gemini.supported": () => geminiAvailability().then((a) => a === "available"),
 
-  "gemini.generate": async ({ channel, data }, sender) => {
-    const signal = restart(sender, channel);
-    try {
-      const session = await LanguageModel.create({ signal });
-      return await session.prompt(data.text, { signal, ...data });
-    } catch (e) {
-      // aborted, or unavailable before a session exists: answer anyway, or the tab waits forever
-      console.warn(e);
-      return null;
-    }
+  "gemini.ready": async () => {
+    const tabs = await chrome.tabs.query({});
+    await Promise.all(tabs.map((tab) =>
+      tab.id === undefined ? null : chrome.tabs.sendMessage(tab.id, { type: "gemini.ready" }).catch(() => {}),
+    ));
   },
+
+  "gemini.generate": ({ channel, data }, sender) =>
+    geminiGenerate({ ...data, signal: restart(sender, channel) }),
 };
 
 chrome.runtime.onMessage.addListener((request: Message, sender, sendResponse) => {

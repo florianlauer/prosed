@@ -11,8 +11,21 @@ import {
   Style,
 } from "../settings";
 import { send } from "../messages";
-import { getLocale, isUiLocale, setLocale, t } from "../i18n/index.ts";
+import {
+  getLocale,
+  isUiLocale,
+  setLocale,
+  t,
+  type MessageKey,
+} from "../i18n/index.ts";
 import { localize, translateElements } from "../i18n/dom.ts";
+import {
+  GEMINI_MODEL,
+  GEMINI_TEST_BACKEND_ERROR,
+  geminiAvailability,
+  geminiOptions,
+  geminiVerify,
+} from "../gemini";
 
 const $ = <T extends HTMLElement>(id: string) =>
   document.getElementById(id) as T;
@@ -94,33 +107,65 @@ const bindAdd = ({
 let settings: Settings;
 let models: string[] | null = null;
 let switching = false;
+let gemini: Availability = "unavailable";
+
+const geminiLabels: Record<Availability, MessageKey> = {
+  available: "geminiAvailableOption",
+  downloadable: "geminiDownloadRequiredOption",
+  downloading: "geminiDownloadingOption",
+  unavailable: "geminiUnavailableOption",
+};
+
+const modelStatus = (): MessageKey => {
+  if (settings.model === GEMINI_MODEL) {
+    if (gemini === "available") return "geminiLocalHint";
+    if (gemini === "unavailable") return "geminiUnavailableHint";
+    return "geminiDownloadHint";
+  }
+  if (models === null) {
+    if ($("model-status").dataset.platform === "desktop")
+      return "modelOfflineDesktop";
+    if (gemini === "available") return "ollamaOfflineGeminiReady";
+    if (gemini !== "unavailable") return "ollamaOfflineGeminiDownload";
+    return "noModelAvailable";
+  }
+  if (models.length === 0) return "modelEmpty";
+  return "modelHint";
+};
 
 const renderModel = () => {
   const select = $<HTMLSelectElement>("model");
-  const names = models ?? [];
+  const names = [
+    ...(models ?? []),
+    ...(gemini !== "unavailable" ? [GEMINI_MODEL] : []),
+  ];
   const options = names.includes(settings.model)
     ? names
     : [settings.model, ...names];
   select.replaceChildren(
     ...options.map((name) => {
       const option = new Option(name, name, false, name === settings.model);
-      if (models && !models.includes(name)) {
+      if (name === GEMINI_MODEL) {
+        localize(option, geminiLabels[gemini]);
+        option.disabled = gemini === "unavailable";
+      } else if (models && !models.includes(name)) {
         localize(option, "modelNotInstalled", { model: name });
+        option.disabled = true;
       }
       return option;
     }),
   );
-  select.disabled = switching || !models?.length;
-  localize(
-    $("model-status"),
-    models === null
-      ? $("model-status").dataset.platform === "desktop"
-        ? "modelOfflineDesktop"
-        : "modelOfflineExtension"
-      : models.length === 0
-        ? "modelEmpty"
-        : "modelHint",
-  );
+  select.disabled = switching || names.length === 0;
+  const download = $<HTMLButtonElement>("gemini-download");
+  if (download) {
+    download.hidden = gemini !== "downloadable" && gemini !== "downloading";
+    download.disabled = switching;
+    localize(
+      download,
+      gemini === "downloading" ? "finishGeminiDownload" : "downloadGemini",
+    );
+  }
+  localize($("model-status"), modelStatus());
 };
 
 const render = () => {
@@ -185,38 +230,80 @@ for (const select of styleSelects) {
   );
 }
 
-$<HTMLSelectElement>("model").addEventListener("change", async (e) => {
-  const select = e.target as HTMLSelectElement;
+const switchModel = async (to: string) => {
+  if (switching) return;
+  const select = $<HTMLSelectElement>("model");
   const from = settings.model;
-  const to = select.value;
+  const modelName = to === GEMINI_MODEL ? "Gemini Nano" : to;
   const load = $("model-load");
   load.hidden = false;
   load.dataset.state = "loading";
-  localize(load, "modelLoading", { model: to });
+  localize(load, "modelLoading", { model: modelName });
   switching = true;
   select.disabled = true;
-  await saveSettings({ model: to });
-
-  const response = await send({
-    type: "ollama.switch",
-    data: { from: models?.includes(from) ? from : null, to },
-  });
-  switching = false;
-  select.disabled = false;
-  if (response && "ok" in response) {
+  const download = $<HTMLButtonElement>("gemini-download");
+  if (download) download.disabled = true;
+  try {
+    if (to === GEMINI_MODEL) {
+      // Start before awaiting storage: Chrome may require the selector's user activation to download.
+      const session = await LanguageModel.create({
+        ...geminiOptions,
+        monitor: (monitor) =>
+          monitor.addEventListener("downloadprogress", (event) => {
+            localize(load, "geminiDownloadProgress", {
+              percent: Math.round(event.loaded * 100),
+            });
+          }),
+      });
+      try {
+        await geminiVerify({ session });
+      } finally {
+        session.destroy();
+      }
+      gemini = "available";
+    } else {
+      const response = await send({
+        type: "ollama.switch",
+        data: { from: models?.includes(from) ? from : null, to },
+      });
+      if (!response || !("ok" in response)) {
+        throw new Error(response ? response.error : "Ollama isn't reachable.");
+      }
+    }
+    await saveSettings({ model: to });
+    settings = { ...settings, model: to };
+    if (to === GEMINI_MODEL && from !== GEMINI_MODEL) {
+      await send({ type: "ollama.switch", data: { from, to: null } }).catch(
+        console.warn,
+      );
+    }
+    if (to === GEMINI_MODEL && from === to) {
+      await send({ type: "gemini.ready" });
+    }
     load.dataset.state = "ready";
-    localize(load, "modelLoaded", { model: to });
-  } else {
+    localize(load, "modelLoaded", { model: modelName });
+  } catch (error) {
+    if (error instanceof Error && error.message === GEMINI_TEST_BACKEND_ERROR) {
+      gemini = "unavailable";
+    }
     load.dataset.state = "error";
-    const detail = response
-      ? document.createTextNode(` ${response.error}`)
-      : "";
-    load.replaceChildren(
-      localize(document.createElement("span"), "modelFailed", { model: to }),
-      detail,
-    );
     load.removeAttribute("data-i18n");
+    load.replaceChildren(
+      localize(document.createElement("span"), "modelFailed", {
+        model: modelName,
+      }),
+      ` ${error instanceof Error ? error.message : String(error)}`,
+    );
+  } finally {
+    switching = false;
+    renderModel();
   }
+};
+$<HTMLSelectElement>("model").addEventListener("change", (e) => {
+  void switchModel((e.target as HTMLSelectElement).value);
+});
+$("gemini-download")?.addEventListener("click", () => {
+  void switchModel(GEMINI_MODEL);
 });
 bindAdd({
   form: $("dictionary-form"),
@@ -241,8 +328,12 @@ const init = async () => {
   settings = await loadSettings();
   render();
 
-  const list = await send({ type: "ollama.list" });
+  const [list, availability] = await Promise.all([
+    send({ type: "ollama.list" }).catch(() => null),
+    geminiAvailability(),
+  ]);
   models = list ? list.models.map((m) => m.name).sort() : null;
+  gemini = availability;
   renderModel();
 };
 

@@ -13,13 +13,15 @@ export type Messages = {
     request: { channel: Channel; data: GenerateRequest & { stream?: false } };
     reply: GenerateResponse | { error: string } | null;
   };
-  // frees the previous model's memory, then loads the new one
-  "ollama.switch": { request: { data: { from: string | null; to: string } }; reply: { ok: true } | { error: string } };
+  // Free the previous model; a null destination only unloads it.
+  "ollama.switch": { request: { data: { from: string | null; to: string | null } }; reply: { ok: true } | { error: string } };
   "gemini.supported": { request: {}; reply: boolean };
-  // null: Gemini failed or the request was aborted
+  // Recheck tabs that were open before Chrome downloaded the model.
+  "gemini.ready": { request: {}; reply: void };
+  // null: the request was aborted; errors retain the browser's original reason
   "gemini.generate": {
     request: { channel: Channel; data: LanguageModelPromptOptions & { text: LanguageModelPrompt } };
-    reply: string | null;
+    reply: string | { error: string } | null;
   };
 };
 

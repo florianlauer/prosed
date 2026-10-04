@@ -58,6 +58,25 @@ test("rewrite of part of a sentence fits the variants back in it", async () => {
   assert.match(requests[0].prompt, /After: , then send it back\?/);
 });
 
+test("rewrite separates versions bundled into a single model answer", async () => {
+  const { generate } = fake({ variants: ["Version 1: J'écris avec paresse. Version 2: Je suis paresseux et écris sans effort. Version 3: Je rédige sans énergie."] });
+  const result = await rewrite({ text: "J'écris avec beaucoup de paresse.", tone: "shorter", settings: defaultSettings, generate });
+  assert.deepEqual(result.variants, ["J'écris avec paresse.", "Je suis paresseux et écris sans effort.", "Je rédige sans énergie."]);
+});
+
+test("each bundled rewrite still has to preserve essential information", async () => {
+  const { generate } = fake({ variants: ["Version 1: Send it before the 15th. Version 2: Send it soon. Version 3: Send it before the 15th."] });
+  const result = await rewrite({ text: "Please send it before the 15th.", settings: defaultSettings, generate });
+  assert.deepEqual(result.variants, ["Send it before the 15th."]);
+});
+
+test("rewrite keeps version labels when they belong to the user's text", async () => {
+  const variant = "Version 1: Send it. Version 2: Keep it. Version 3: Review it.";
+  const { generate } = fake({ variants: [variant] });
+  const result = await rewrite({ text: "Version 1: Please send it. Version 2: Please keep it. Version 3: Please review it.", settings: defaultSettings, generate });
+  assert.deepEqual(result.variants, [variant]);
+});
+
 test("formality reads the level on the meter channel", async () => {
   const { generate, requests } = fake({ formality: 4 });
   assert.equal(await formality({ text: "  Dear Sir,  ", settings: defaultSettings, generate }), 4);

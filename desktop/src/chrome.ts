@@ -23,6 +23,7 @@ const handlers: Handlers<"ollama.list" | "ollama.switch"> = {
   "ollama.switch": async ({ data: { from, to } }) => {
     // as in the extension: free the previous model, then load the new one
     await (from ? load({ model: from, keep_alive: 0 }) : null)?.catch(() => {});
+    if (to === null) return { ok: true };
     return load({ model: to, keep_alive: -1 }).then(
       () => ({ ok: true as const }),
       (e) => ({ error: String(e) }),

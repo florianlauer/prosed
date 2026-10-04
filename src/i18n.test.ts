@@ -14,6 +14,20 @@ import { check, rewrite, formality, tonesFor, type Generate } from "./check.ts";
 import { findFalseFriends } from "./falseFriends.ts";
 import { noteTranslation } from "./i18n/index.ts";
 
+test("localizes Gemini download states and preserves its product name", () => {
+  setLocale("fr");
+  assert.equal(t("downloadGemini"), "Télécharger Gemini Nano");
+  assert.equal(
+    t("geminiDownloadProgress", { percent: 42 }),
+    "Téléchargement de Gemini Nano… 42 %",
+  );
+  assert.equal(
+    t("geminiDownloadRequiredOption"),
+    "Gemini Nano · Chrome (téléchargement requis)",
+  );
+  setLocale("en");
+});
+
 test("localizes explanatory notes without changing the notes used in prompts", () => {
   const notes = findFalseFriends(
     "Actually, I assisted to the meeting. I have informations.",

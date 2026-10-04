@@ -42,14 +42,23 @@
 
       <section class="opt__section" aria-labelledby="model-title">
         <h2 id="model-title" data-i18n="model">Model</h2>
-        <p class="opt__hint" id="model-status" data-i18n="lookingForOllama">
-          Looking for Ollama…
+        <p class="opt__hint" id="model-status" data-i18n="lookingForModels">
+          Looking for local models…
         </p>
         <select
           id="model"
           class="opt__field"
           aria-labelledby="model-title"
         ></select>
+        <button
+          class="opt__button"
+          id="gemini-download"
+          type="button"
+          data-i18n="downloadGemini"
+          hidden
+        >
+          Download Gemini Nano
+        </button>
         <p class="opt__load" id="model-load" role="status" hidden></p>
       </section>
 

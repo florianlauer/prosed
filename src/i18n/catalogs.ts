@@ -9,6 +9,26 @@ export const en = {
   systemLanguage: "Follow browser or system",
   model: "Model",
   lookingForOllama: "Looking for Ollama…",
+  lookingForModels: "Looking for local models…",
+  geminiAvailableOption: "Gemini Nano · Chrome",
+  geminiDownloadRequiredOption: "Gemini Nano · Chrome (download required)",
+  geminiDownloadingOption: "Gemini Nano · Chrome (downloading)",
+  geminiUnavailableOption: "Gemini Nano · Chrome (unavailable)",
+  geminiLocalHint:
+    "Gemini Nano runs locally in Chrome. Your text stays on this device.",
+  geminiUnavailableHint:
+    "Gemini Nano isn't available in this browser. Choose an installed Ollama model.",
+  geminiDownloadHint:
+    "Select Gemini Nano to finish downloading the model in Chrome.",
+  ollamaOfflineGeminiReady:
+    "Ollama isn't reachable. Checks use Gemini Nano in Chrome. You can select it here.",
+  ollamaOfflineGeminiDownload:
+    "Ollama isn't reachable. Select Gemini Nano to download Chrome's local model.",
+  noModelAvailable:
+    "No model is available. Start Ollama, or use Chrome on a device that supports Gemini Nano.",
+  finishGeminiDownload: "Finish downloading Gemini Nano",
+  downloadGemini: "Download Gemini Nano",
+  geminiDownloadProgress: "Downloading Gemini Nano… {percent}%",
   modelOfflineExtension:
     "Ollama isn't reachable, so the extension uses the model built into Chrome. Start Ollama to pick a model here.",
   modelOfflineDesktop:
@@ -175,6 +195,26 @@ const fr: Catalog = {
   systemLanguage: "Suivre le navigateur ou le système",
   model: "Modèle",
   lookingForOllama: "Recherche d’Ollama…",
+  lookingForModels: "Recherche des modèles locaux…",
+  geminiAvailableOption: "Gemini Nano · Chrome",
+  geminiDownloadRequiredOption: "Gemini Nano · Chrome (téléchargement requis)",
+  geminiDownloadingOption: "Gemini Nano · Chrome (téléchargement en cours)",
+  geminiUnavailableOption: "Gemini Nano · Chrome (indisponible)",
+  geminiLocalHint:
+    "Gemini Nano fonctionne localement dans Chrome. Votre texte reste sur cet appareil.",
+  geminiUnavailableHint:
+    "Gemini Nano est indisponible dans ce navigateur. Choisissez un modèle Ollama installé.",
+  geminiDownloadHint:
+    "Sélectionnez Gemini Nano pour terminer le téléchargement du modèle dans Chrome.",
+  ollamaOfflineGeminiReady:
+    "Ollama est inaccessible. Les vérifications utilisent Gemini Nano dans Chrome. Vous pouvez le sélectionner ici.",
+  ollamaOfflineGeminiDownload:
+    "Ollama est inaccessible. Sélectionnez Gemini Nano pour télécharger le modèle local de Chrome.",
+  noModelAvailable:
+    "Aucun modèle n’est disponible. Lancez Ollama ou utilisez Chrome sur un appareil compatible avec Gemini Nano.",
+  finishGeminiDownload: "Terminer le téléchargement de Gemini Nano",
+  downloadGemini: "Télécharger Gemini Nano",
+  geminiDownloadProgress: "Téléchargement de Gemini Nano… {percent} %",
   modelOfflineExtension:
     "Ollama est inaccessible. L’extension utilise donc le modèle intégré à Chrome. Lancez Ollama pour choisir un modèle ici.",
   modelOfflineDesktop:
@@ -347,6 +387,26 @@ const de: Catalog = {
   systemLanguage: "Browser- oder Systemsprache verwenden",
   model: "Modell",
   lookingForOllama: "Ollama wird gesucht…",
+  lookingForModels: "Lokale Modelle werden gesucht…",
+  geminiAvailableOption: "Gemini Nano · Chrome",
+  geminiDownloadRequiredOption: "Gemini Nano · Chrome (Download erforderlich)",
+  geminiDownloadingOption: "Gemini Nano · Chrome (wird heruntergeladen)",
+  geminiUnavailableOption: "Gemini Nano · Chrome (nicht verfügbar)",
+  geminiLocalHint:
+    "Gemini Nano läuft lokal in Chrome. Ihr Text bleibt auf diesem Gerät.",
+  geminiUnavailableHint:
+    "Gemini Nano ist in diesem Browser nicht verfügbar. Wählen Sie ein installiertes Ollama-Modell.",
+  geminiDownloadHint:
+    "Wählen Sie Gemini Nano, um den Download des Modells in Chrome abzuschließen.",
+  ollamaOfflineGeminiReady:
+    "Ollama ist nicht erreichbar. Prüfungen verwenden Gemini Nano in Chrome. Sie können es hier auswählen.",
+  ollamaOfflineGeminiDownload:
+    "Ollama ist nicht erreichbar. Wählen Sie Gemini Nano, um das lokale Modell von Chrome herunterzuladen.",
+  noModelAvailable:
+    "Kein Modell ist verfügbar. Starten Sie Ollama oder verwenden Sie Chrome auf einem Gerät, das Gemini Nano unterstützt.",
+  finishGeminiDownload: "Download von Gemini Nano abschließen",
+  downloadGemini: "Gemini Nano herunterladen",
+  geminiDownloadProgress: "Gemini Nano wird heruntergeladen… {percent} %",
   modelOfflineExtension:
     "Ollama ist nicht erreichbar. Die Erweiterung verwendet das in Chrome integrierte Modell. Starten Sie Ollama, um hier ein Modell auszuwählen.",
   modelOfflineDesktop:
@@ -519,6 +579,26 @@ const es: Catalog = {
   systemLanguage: "Usar el idioma del navegador o del sistema",
   model: "Modelo",
   lookingForOllama: "Buscando Ollama…",
+  lookingForModels: "Buscando modelos locales…",
+  geminiAvailableOption: "Gemini Nano · Chrome",
+  geminiDownloadRequiredOption: "Gemini Nano · Chrome (descarga necesaria)",
+  geminiDownloadingOption: "Gemini Nano · Chrome (descargando)",
+  geminiUnavailableOption: "Gemini Nano · Chrome (no disponible)",
+  geminiLocalHint:
+    "Gemini Nano funciona localmente en Chrome. Tu texto permanece en este dispositivo.",
+  geminiUnavailableHint:
+    "Gemini Nano no está disponible en este navegador. Elige un modelo Ollama instalado.",
+  geminiDownloadHint:
+    "Selecciona Gemini Nano para terminar de descargar el modelo en Chrome.",
+  ollamaOfflineGeminiReady:
+    "Ollama no está disponible. Las revisiones usan Gemini Nano en Chrome. Puedes seleccionarlo aquí.",
+  ollamaOfflineGeminiDownload:
+    "Ollama no está disponible. Selecciona Gemini Nano para descargar el modelo local de Chrome.",
+  noModelAvailable:
+    "No hay ningún modelo disponible. Inicia Ollama o usa Chrome en un dispositivo compatible con Gemini Nano.",
+  finishGeminiDownload: "Terminar de descargar Gemini Nano",
+  downloadGemini: "Descargar Gemini Nano",
+  geminiDownloadProgress: "Descargando Gemini Nano… {percent} %",
   modelOfflineExtension:
     "Ollama no está disponible. La extensión utiliza el modelo integrado en Chrome. Inicia Ollama para elegir un modelo aquí.",
   modelOfflineDesktop:
@@ -686,6 +766,26 @@ const it: Catalog = {
   systemLanguage: "Usa la lingua del browser o del sistema",
   model: "Modello",
   lookingForOllama: "Ricerca di Ollama…",
+  lookingForModels: "Ricerca dei modelli locali…",
+  geminiAvailableOption: "Gemini Nano · Chrome",
+  geminiDownloadRequiredOption: "Gemini Nano · Chrome (download necessario)",
+  geminiDownloadingOption: "Gemini Nano · Chrome (download in corso)",
+  geminiUnavailableOption: "Gemini Nano · Chrome (non disponibile)",
+  geminiLocalHint:
+    "Gemini Nano funziona localmente in Chrome. Il tuo testo rimane su questo dispositivo.",
+  geminiUnavailableHint:
+    "Gemini Nano non è disponibile in questo browser. Scegli un modello Ollama installato.",
+  geminiDownloadHint:
+    "Seleziona Gemini Nano per completare il download del modello in Chrome.",
+  ollamaOfflineGeminiReady:
+    "Ollama non è raggiungibile. I controlli usano Gemini Nano in Chrome. Puoi selezionarlo qui.",
+  ollamaOfflineGeminiDownload:
+    "Ollama non è raggiungibile. Seleziona Gemini Nano per scaricare il modello locale di Chrome.",
+  noModelAvailable:
+    "Nessun modello è disponibile. Avvia Ollama o usa Chrome su un dispositivo che supporta Gemini Nano.",
+  finishGeminiDownload: "Completa il download di Gemini Nano",
+  downloadGemini: "Scarica Gemini Nano",
+  geminiDownloadProgress: "Download di Gemini Nano… {percent}%",
   modelOfflineExtension:
     "Ollama non è raggiungibile. L’estensione usa il modello integrato in Chrome. Avvia Ollama per scegliere un modello qui.",
   modelOfflineDesktop:
