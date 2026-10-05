@@ -14,6 +14,7 @@ use objc2_app_kit::{NSApplicationActivationPolicy, NSRunningApplication, NSWorks
 use std::collections::HashSet;
 use std::ffi::c_void;
 use std::ptr;
+use std::time::{Duration, Instant};
 
 // Roles of the elements people type prose in. A contenteditable in Chromium and Electron is an AXTextArea too.
 pub type Pid = i32;
@@ -246,32 +247,92 @@ impl Field {
         Some((r.location as usize, (r.location + r.length) as usize))
     }
 
-    // Selects the range and replaces the selected text, which keeps the app's undo. Chromium
-    // takes the selection but silently ignores the new text, so it gets typed instead. Apps that
-    // refuse the selection get their whole value set.
     pub fn replace(&self, start: usize, end: usize, replacement: &str) -> bool {
-        let Some(next) = self.text().and_then(|t| splice(&t, start, end, replacement)) else {
-            return false;
-        };
-        if set_attribute(self.0, kAXSelectedTextRangeAttribute, &range_value(start, end)) {
-            if set_attribute(self.0, kAXSelectedTextAttribute, &CFString::new(replacement).as_CFType()) && self.reads(&next) {
-                return true;
-            }
-            return crate::keys::type_text(replacement);
-        }
-        set_attribute(self.0, kAXValueAttribute, &CFString::new(&next).as_CFType())
+        replace_text(self, start, end, replacement)
+    }
+}
+
+// Attribute setters can report success before an app applies the selection or edit.
+trait EditableField {
+    fn text(&self) -> Option<String>;
+    fn selection(&self) -> Option<(usize, usize)>;
+    fn select(&self, start: usize, end: usize) -> bool;
+    fn replace_selected(&self, replacement: &str) -> bool;
+    fn set_text(&self, text: &str) -> bool;
+    fn type_text(&self, text: &str) -> bool;
+}
+
+impl EditableField for Field {
+    fn text(&self) -> Option<String> {
+        Field::text(self)
     }
 
-    // Whether the field shows `text`, giving an app that applies edits late a moment.
-    fn reads(&self, text: &str) -> bool {
-        for _ in 0..3 {
-            if self.text().as_deref() == Some(text) {
-                return true;
-            }
-            std::thread::sleep(std::time::Duration::from_millis(40));
-        }
-        false
+    fn selection(&self) -> Option<(usize, usize)> {
+        Field::selection(self)
     }
+
+    fn select(&self, start: usize, end: usize) -> bool {
+        set_attribute(self.0, kAXSelectedTextRangeAttribute, &range_value(start, end))
+    }
+
+    fn replace_selected(&self, replacement: &str) -> bool {
+        set_attribute(self.0, kAXSelectedTextAttribute, &CFString::new(replacement).as_CFType())
+    }
+
+    fn set_text(&self, text: &str) -> bool {
+        set_attribute(self.0, kAXValueAttribute, &CFString::new(text).as_CFType())
+    }
+
+    fn type_text(&self, text: &str) -> bool {
+        // Long Unicode input is split into keyboard events, which rich editors can interleave.
+        if text.encode_utf16().count() > 20 {
+            crate::keys::paste(text)
+        } else {
+            crate::keys::type_text(text)
+        }
+    }
+}
+
+fn wait_until(mut ready: impl FnMut() -> bool) -> bool {
+    let deadline = Instant::now() + Duration::from_millis(300);
+    loop {
+        if ready() {
+            return true;
+        }
+        if Instant::now() >= deadline {
+            return false;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
+}
+
+fn select_text(field: &impl EditableField, start: usize, end: usize, original: &str) -> bool {
+    field.select(start, end)
+        && wait_until(|| field.selection() == Some((start, end)))
+        && field.text().as_deref() == Some(original)
+}
+
+fn replace_text(field: &impl EditableField, start: usize, end: usize, replacement: &str) -> bool {
+    let Some(original) = field.text() else { return false };
+    let Some(next) = splice(&original, start, end, replacement) else { return false };
+    if original == next {
+        return true;
+    }
+    if !select_text(field, start, end, &original) {
+        return field.text().as_deref() == Some(original.as_str())
+            && field.set_text(&next)
+            && wait_until(|| field.text().as_deref() == Some(next.as_str()));
+    }
+
+    let _ = field.replace_selected(replacement);
+    if wait_until(|| field.text().as_deref() == Some(next.as_str())) {
+        return true;
+    }
+    // A failed or partial edit must never be followed by another insertion.
+    if field.text().as_deref() != Some(original.as_str()) || !select_text(field, start, end, &original) {
+        return false;
+    }
+    field.type_text(replacement) && wait_until(|| field.text().as_deref() == Some(next.as_str()))
 }
 
 // The apps with a window, for the settings to add one before typing in it.
@@ -311,3 +372,7 @@ pub fn open_permission_settings() {
         .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
         .spawn();
 }
+
+#[cfg(test)]
+#[path = "macos_tests.rs"]
+mod tests;
