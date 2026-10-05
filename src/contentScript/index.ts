@@ -12,7 +12,7 @@ import {
 } from "../settings";
 import { type Tone } from "../prompts";
 import { getLocale, setLocale, toneMessages, formalityMessages, t, type MessageKey, type Values } from "../i18n/index.ts";
-import { localize, localizeNote, message, translateOverlay } from "../i18n/dom.ts";
+import { localize, localizeNote, message, translateOverlay, unlocalize } from "../i18n/dom.ts";
 import { formality, rewrite, tonesFor, type Generate, type Rewrite } from "../check";
 import { send, type Message } from "../messages";
 import { CheckSession } from "../session";
@@ -366,12 +366,18 @@ class Tooltip {
 
   set content({ title, values = {}, body, muted, action }: PanelContent) {
     if (title) localize(this.#title, title, values);
-    else { this.#title.removeAttribute("data-i18n"); this.#title.textContent = ""; }
+    else {
+      unlocalize(this.#title);
+      this.#title.textContent = "";
+    }
     this.#body.replaceChildren(...(body ? [body] : []));
     this.#tooltip.toggleAttribute("data-muted", !!muted);
     this.#action.hidden = !action;
     if (action) localize(this.#action, action.label);
-    else { this.#action.removeAttribute("data-i18n"); this.#action.textContent = ""; }
+    else {
+      unlocalize(this.#action);
+      this.#action.textContent = "";
+    }
     this.#onAction = action?.onClick ?? null;
     this.#updateTooltipPosition();
   }

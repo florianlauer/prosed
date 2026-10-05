@@ -18,7 +18,7 @@ import {
   t,
   type MessageKey,
 } from "../i18n/index.ts";
-import { localize, translateElements } from "../i18n/dom.ts";
+import { localize, translateElements, unlocalize } from "../i18n/dom.ts";
 import {
   GEMINI_MODEL,
   GEMINI_TEST_BACKEND_ERROR,
@@ -287,7 +287,7 @@ const switchModel = async (to: string) => {
       gemini = "unavailable";
     }
     load.dataset.state = "error";
-    load.removeAttribute("data-i18n");
+    unlocalize(load);
     load.replaceChildren(
       localize(document.createElement("span"), "modelFailed", {
         model: modelName,

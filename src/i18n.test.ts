@@ -47,6 +47,61 @@ test("localizes explanatory notes without changing the notes used in prompts", (
   setLocale("en");
 });
 
+test("false-friend notes share their English source with the catalogs", () => {
+  const original = catalogs.en.noteActually;
+  try {
+    catalogs.en.noteActually = `${original} Updated explanation.`;
+    const [note] = findFalseFriends("Actually, I agree.").notes;
+    assert.equal(note, catalogs.en.noteActually);
+    assert.deepEqual(noteTranslation(note), {
+      key: "noteActually",
+      values: {},
+    });
+  } finally {
+    catalogs.en.noteActually = original;
+  }
+});
+
+test("all false-friend explanations have a display translation", () => {
+  const text =
+    "Actually, eventually I assisted to the meeting. Precise the date in the planning. Sympathic people discussed about it since two weeks. The formation brought deceptions. Prevent you and demand you to take the occasion to share my coordinates. I have informations, advices and feedbacks. Sensible people pass an exam. I am agree.";
+  const notes = findFalseFriends(text).notes;
+  assert.equal(notes.length, 20);
+  for (const note of notes) assert.ok(noteTranslation(note), note);
+});
+
+test("uses each locale's plural rules for count labels", () => {
+  const nouns = {
+    en: ["suggestion", "suggestions"],
+    fr: ["suggestion", "suggestions"],
+    de: ["Vorschlag", "Vorschläge"],
+    es: ["sugerencia", "sugerencias"],
+    it: ["suggerimento", "suggerimenti"],
+  };
+  for (const [locale, [one, other]] of Object.entries(nouns)) {
+    setLocale(locale);
+    for (const count of [0, 1, 2]) {
+      const noun =
+        new Intl.PluralRules(locale).select(count) === "one" ? one : other;
+      assert.equal(
+        t("suggestions", { count }),
+        `${count} ${noun}`,
+        `${locale}.${count}`,
+      );
+    }
+  }
+  setLocale("fr");
+  assert.equal(t("suggestions", { count: 0 }), "0 suggestion");
+  assert.equal(t("suggestions", { count: 1 }), "1 suggestion");
+  assert.equal(t("suggestions", { count: 2 }), "2 suggestions");
+  assert.equal(
+    t("acceptAllHint", { count: 0 }),
+    "0 suggestion, cliquez pour tout appliquer",
+  );
+  setLocale("en");
+  assert.equal(t("suggestions", { count: 0 }), "0 suggestions");
+});
+
 test("resolves system locales and safely falls back to English", () => {
   assert.equal(resolveLocale("system", ["fr-CA", "en-US"]), "fr");
   assert.equal(resolveLocale("system", ["pt-BR", "de-DE"]), "de");
@@ -76,12 +131,25 @@ test("every locale covers tone labels, formality and interpolation tokens", () =
     for (const key of keys) {
       const source = catalogs.en[key as keyof typeof catalogs.en];
       const translated = messages[key as keyof typeof messages];
-      assert.ok(translated.trim(), `${locale}.${key}`);
+      assert.equal(typeof translated, typeof source, `${locale}.${key}`);
+      const sourceForms: Record<string, string> =
+        typeof source === "string" ? { text: source } : source;
+      const translatedForms: Record<string, string> =
+        typeof translated === "string" ? { text: translated } : translated;
       assert.deepEqual(
-        translated.match(/\{\w+\}/g)?.sort(),
-        source.match(/\{\w+\}/g)?.sort(),
+        Object.keys(translatedForms),
+        Object.keys(sourceForms),
         `${locale}.${key}`,
       );
+      for (const [form, value] of Object.entries(sourceForms)) {
+        const text = translatedForms[form];
+        assert.ok(text.trim(), `${locale}.${key}.${form}`);
+        assert.deepEqual(
+          text.match(/\{\w+\}/g)?.sort(),
+          value.match(/\{\w+\}/g)?.sort(),
+          `${locale}.${key}.${form}`,
+        );
+      }
     }
     setLocale(locale);
     for (const tone of Object.keys(tones)) {

@@ -131,10 +131,11 @@ export const en = {
   checkingProgress: "Checking…",
   noSuggestions: "No suggestions",
   noFixes: "No fixes",
-  suggestions: "{count} suggestions",
-  suggestionOne: "{count} suggestion",
-  acceptAllHint: "{count} suggestions, click to accept all",
-  acceptOneHint: "{count} suggestion, click to accept all",
+  suggestions: { one: "{count} suggestion", other: "{count} suggestions" },
+  acceptAllHint: {
+    one: "{count} suggestion, click to accept all",
+    other: "{count} suggestions, click to accept all",
+  },
   acceptAll: "Accept all",
   checkUnavailable: "Grammar check unavailable",
   openDocs: "Open docs",
@@ -182,7 +183,11 @@ export const en = {
 };
 
 export type MessageKey = keyof typeof en;
-type Catalog = Record<MessageKey, string>;
+type Catalog = {
+  [Key in MessageKey]: (typeof en)[Key] extends string
+    ? string
+    : { one: string; other: string };
+};
 
 const fr: Catalog = {
   settings: "Réglages",
@@ -321,10 +326,11 @@ const fr: Catalog = {
   checkingProgress: "Vérification…",
   noSuggestions: "Aucune suggestion",
   noFixes: "Aucune correction",
-  suggestions: "{count} suggestions",
-  suggestionOne: "{count} suggestion",
-  acceptAllHint: "{count} suggestions, cliquez pour tout appliquer",
-  acceptOneHint: "{count} suggestion, cliquez pour tout appliquer",
+  suggestions: { one: "{count} suggestion", other: "{count} suggestions" },
+  acceptAllHint: {
+    one: "{count} suggestion, cliquez pour tout appliquer",
+    other: "{count} suggestions, cliquez pour tout appliquer",
+  },
   acceptAll: "Tout appliquer",
   checkUnavailable: "Vérification grammaticale indisponible",
   openDocs: "Ouvrir la documentation",
@@ -512,11 +518,11 @@ const de: Catalog = {
   checkingProgress: "Wird geprüft…",
   noSuggestions: "Keine Vorschläge",
   noFixes: "Keine Korrekturen",
-  suggestions: "{count} Vorschläge",
-  suggestionOne: "{count} Vorschlag",
-  acceptAllHint:
-    "{count} Vorschläge, klicken Sie zum Anwenden aller Korrekturen",
-  acceptOneHint: "{count} Vorschlag, klicken Sie zum Anwenden",
+  suggestions: { one: "{count} Vorschlag", other: "{count} Vorschläge" },
+  acceptAllHint: {
+    one: "{count} Vorschlag, klicken Sie zum Anwenden",
+    other: "{count} Vorschläge, klicken Sie zum Anwenden aller Korrekturen",
+  },
   acceptAll: "Alle anwenden",
   checkUnavailable: "Grammatikprüfung nicht verfügbar",
   openDocs: "Dokumentation öffnen",
@@ -704,10 +710,11 @@ const es: Catalog = {
   checkingProgress: "Revisando…",
   noSuggestions: "Sin sugerencias",
   noFixes: "Sin correcciones",
-  suggestions: "{count} sugerencias",
-  suggestionOne: "{count} sugerencia",
-  acceptAllHint: "{count} sugerencias, haz clic para aplicarlas todas",
-  acceptOneHint: "{count} sugerencia, haz clic para aplicarla",
+  suggestions: { one: "{count} sugerencia", other: "{count} sugerencias" },
+  acceptAllHint: {
+    one: "{count} sugerencia, haz clic para aplicarla",
+    other: "{count} sugerencias, haz clic para aplicarlas todas",
+  },
   acceptAll: "Aplicar todo",
   checkUnavailable: "Revisión gramatical no disponible",
   openDocs: "Abrir la documentación",
@@ -890,10 +897,11 @@ const it: Catalog = {
   checkingProgress: "Controllo…",
   noSuggestions: "Nessun suggerimento",
   noFixes: "Nessuna correzione",
-  suggestions: "{count} suggerimenti",
-  suggestionOne: "{count} suggerimento",
-  acceptAllHint: "{count} suggerimenti, fai clic per applicarli tutti",
-  acceptOneHint: "{count} suggerimento, fai clic per applicarlo",
+  suggestions: { one: "{count} suggerimento", other: "{count} suggerimenti" },
+  acceptAllHint: {
+    one: "{count} suggerimento, fai clic per applicarlo",
+    other: "{count} suggerimenti, fai clic per applicarli tutti",
+  },
   acceptAll: "Applica tutto",
   checkUnavailable: "Controllo grammaticale non disponibile",
   openDocs: "Apri la documentazione",

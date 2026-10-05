@@ -25,17 +25,27 @@ export const resolveLocale = (
 };
 
 let locale = resolveLocale("system");
+let pluralRules = new Intl.PluralRules(locale);
 export const getLocale = () => locale;
 export const setLocale = (value: unknown) => {
   locale = resolveLocale(value);
+  pluralRules = new Intl.PluralRules(locale);
 };
 
-export const t = (key: MessageKey, values: Values = {}): string => {
-  if (key === "suggestions" && values.count === 1) key = "suggestionOne";
-  if (key === "acceptAllHint" && values.count === 1) key = "acceptOneHint";
-  return catalogs[locale][key].replace(/\{(\w+)\}/g, (token, name: string) =>
+export const formatMessage = (template: string, values: Values = {}): string =>
+  template.replace(/\{(\w+)\}/g, (token, name: string) =>
     Object.hasOwn(values, name) ? String(values[name]) : token,
   );
+
+export const t = (key: MessageKey, values: Values = {}): string => {
+  const message = catalogs[locale][key];
+  const template =
+    typeof message === "string"
+      ? message
+      : pluralRules.select(Number(values.count)) === "one"
+        ? message.one
+        : message.other;
+  return formatMessage(template, values);
 };
 
 export const toneMessages = {
