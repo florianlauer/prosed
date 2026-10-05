@@ -1,4 +1,4 @@
-use super::{splice, App, Rect};
+use super::{splice, App, Rect, Replacement};
 use std::ffi::c_void;
 use std::path::Path;
 use windows::core::{BOOL, BSTR, PWSTR};
@@ -153,21 +153,25 @@ impl Field {
     // Selects the range and types the replacement, which keeps the app's undo. Fields
     // without a text selection get their whole value set instead.
     pub fn replace(&self, start: usize, end: usize, replacement: &str) -> bool {
-        let Some(text) = self.text() else { return false };
+        self.replace_outcome(start, end, replacement) == Replacement::Applied
+    }
+
+    pub fn replace_outcome(&self, start: usize, end: usize, replacement: &str) -> Replacement {
+        let Some(text) = self.text() else { return Replacement::Untouched };
         unsafe {
             // only types over the right text, see `range`
             if let Some(range) = self.range(&text, start, end) {
                 if range.Select().is_ok() {
-                    return crate::keys::type_text(replacement);
+                    return if crate::keys::type_text(replacement) { Replacement::Applied } else { Replacement::Unconfirmed };
                 }
             }
             let Some(next) = splice(&text, start, end, replacement) else {
-                return false;
+                return Replacement::Untouched;
             };
             let Ok(value) = self.element.GetCurrentPatternAs::<IUIAutomationValuePattern>(UIA_ValuePatternId) else {
-                return false;
+                return Replacement::Untouched;
             };
-            value.SetValue(&BSTR::from(next)).is_ok()
+            if value.SetValue(&BSTR::from(next)).is_ok() { Replacement::Applied } else { Replacement::Unconfirmed }
         }
     }
 }

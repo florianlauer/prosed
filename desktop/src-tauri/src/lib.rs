@@ -5,7 +5,7 @@ pub mod platform;
 mod worker;
 
 use config::Config;
-use platform::Rect;
+use platform::{Rect, Replacement};
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::path::PathBuf;
@@ -513,10 +513,11 @@ fn replace_selection(app: AppHandle, shared: tauri::State<'_, Arc<Shared>>, text
         let (reply, done) = channel();
         let _ = shared.worker.lock().unwrap().send(Command::ReplaceSelection { selection: rewrite.selection, text: text.clone(), reply });
         match done.recv_timeout(Duration::from_secs(2)).ok().flatten() {
-            Some(true) => return true,
+            Some(Replacement::Applied) => return true,
             // another field has the focus, or the selection changed: pasting would land somewhere else
             None => return false,
-            Some(false) => {}
+            Some(Replacement::Unconfirmed) => return false,
+            Some(Replacement::Untouched) => {}
         }
     }
     let (reply, on_target) = channel();

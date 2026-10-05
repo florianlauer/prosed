@@ -1,4 +1,4 @@
-use super::{splice, App, Rect};
+use super::{splice, App, Rect, Replacement};
 use accessibility_sys::*;
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::{CFType, TCFType};
@@ -59,6 +59,13 @@ fn copy_attribute(element: AXUIElementRef, name: &str) -> Option<CFType> {
 fn set_attribute(element: AXUIElementRef, name: &str, value: &CFType) -> bool {
     let name = CFString::new(name);
     unsafe { AXUIElementSetAttributeValue(element, name.as_concrete_TypeRef(), value.as_CFTypeRef()) == kAXErrorSuccess }
+}
+
+fn attribute_settable(element: AXUIElementRef, name: &str) -> Option<bool> {
+    let name = CFString::new(name);
+    let mut settable = 0;
+    let error = unsafe { AXUIElementIsAttributeSettable(element, name.as_concrete_TypeRef(), &mut settable) };
+    (error == kAXErrorSuccess).then_some(settable != 0)
 }
 
 fn string(value: &CFType) -> Option<String> {
@@ -248,16 +255,21 @@ impl Field {
     }
 
     pub fn replace(&self, start: usize, end: usize, replacement: &str) -> bool {
-        replace_text(self, start, end, replacement)
+        self.replace_outcome(start, end, replacement) == Replacement::Applied
+    }
+
+    pub fn replace_outcome(&self, start: usize, end: usize, replacement: &str) -> Replacement {
+        replace_outcome(self, start, end, replacement)
     }
 }
 
-// Attribute setters can report success before an app applies the selection or edit.
+// Setter booleans acknowledge the AX request, not the resulting selection or text.
 trait EditableField {
     fn text(&self) -> Option<String>;
     fn selection(&self) -> Option<(usize, usize)>;
+    fn focused(&self) -> bool;
+    fn can_set_text(&self) -> bool;
     fn select(&self, start: usize, end: usize) -> bool;
-    fn replace_selected(&self, replacement: &str) -> bool;
     fn set_text(&self, text: &str) -> bool;
     fn type_text(&self, text: &str) -> bool;
 }
@@ -271,12 +283,20 @@ impl EditableField for Field {
         Field::selection(self)
     }
 
+    fn focused(&self) -> bool {
+        let system = unsafe { CFType::wrap_under_create_rule(AXUIElementCreateSystemWide() as CFTypeRef) };
+        let element = system.as_CFTypeRef() as AXUIElementRef;
+        unsafe { AXUIElementSetMessagingTimeout(element, 0.3) };
+        copy_attribute(element, kAXFocusedUIElementAttribute)
+            .is_some_and(|focused| unsafe { CFEqual(focused.as_CFTypeRef(), self.0 as CFTypeRef) != 0 })
+    }
+
     fn select(&self, start: usize, end: usize) -> bool {
         set_attribute(self.0, kAXSelectedTextRangeAttribute, &range_value(start, end))
     }
 
-    fn replace_selected(&self, replacement: &str) -> bool {
-        set_attribute(self.0, kAXSelectedTextAttribute, &CFString::new(replacement).as_CFType())
+    fn can_set_text(&self) -> bool {
+        attribute_settable(self.0, kAXValueAttribute) == Some(true)
     }
 
     fn set_text(&self, text: &str) -> bool {
@@ -284,17 +304,11 @@ impl EditableField for Field {
     }
 
     fn type_text(&self, text: &str) -> bool {
-        // Long Unicode input is split into keyboard events, which rich editors can interleave.
-        if text.encode_utf16().count() > 20 {
-            crate::keys::paste(text)
-        } else {
-            crate::keys::type_text(text)
-        }
+        crate::keys::type_text(text)
     }
 }
 
-fn wait_until(mut ready: impl FnMut() -> bool) -> bool {
-    let deadline = Instant::now() + Duration::from_millis(300);
+fn wait_until(deadline: Instant, mut ready: impl FnMut() -> bool) -> bool {
     loop {
         if ready() {
             return true;
@@ -302,37 +316,51 @@ fn wait_until(mut ready: impl FnMut() -> bool) -> bool {
         if Instant::now() >= deadline {
             return false;
         }
-        std::thread::sleep(Duration::from_millis(20));
+        std::thread::sleep(Duration::from_millis(20).min(deadline.saturating_duration_since(Instant::now())));
     }
 }
 
-fn select_text(field: &impl EditableField, start: usize, end: usize, original: &str) -> bool {
-    field.select(start, end)
-        && wait_until(|| field.selection() == Some((start, end)))
-        && field.text().as_deref() == Some(original)
+fn confirm(field: &impl EditableField, next: &str, deadline: Instant) -> Replacement {
+    if wait_until(deadline, || field.text().as_deref() == Some(next)) {
+        Replacement::Applied
+    } else {
+        Replacement::Unconfirmed
+    }
 }
 
-fn replace_text(field: &impl EditableField, start: usize, end: usize, replacement: &str) -> bool {
-    let Some(original) = field.text() else { return false };
-    let Some(next) = splice(&original, start, end, replacement) else { return false };
+fn replace_outcome(field: &impl EditableField, start: usize, end: usize, replacement: &str) -> Replacement {
+    let deadline = Instant::now() + Duration::from_millis(900);
+    let Some(original) = field.text() else { return Replacement::Untouched };
+    let Some(next) = splice(&original, start, end, replacement) else { return Replacement::Untouched };
     if original == next {
-        return true;
+        return Replacement::Applied;
     }
-    if !select_text(field, start, end, &original) {
-        return field.text().as_deref() == Some(original.as_str())
-            && field.set_text(&next)
-            && wait_until(|| field.text().as_deref() == Some(next.as_str()));
+    if Instant::now() >= deadline {
+        return Replacement::Untouched;
     }
-
-    let _ = field.replace_selected(replacement);
-    if wait_until(|| field.text().as_deref() == Some(next.as_str())) {
-        return true;
+    if !field.select(start, end) {
+        if !field.can_set_text()
+            || field.text().as_deref() != Some(original.as_str())
+            || !field.focused()
+            || Instant::now() >= deadline
+        {
+            return Replacement::Untouched;
+        }
+        let _ = field.set_text(&next);
+        return confirm(field, &next, deadline);
     }
-    // A failed or partial edit must never be followed by another insertion.
-    if field.text().as_deref() != Some(original.as_str()) || !select_text(field, start, end, &original) {
-        return false;
+    if !wait_until(deadline, || field.selection() == Some((start, end)))
+        || field.text().as_deref() != Some(original.as_str())
+        || !field.focused()
+        || Instant::now() >= deadline
+    {
+        return Replacement::Untouched;
     }
-    field.type_text(replacement) && wait_until(|| field.text().as_deref() == Some(next.as_str()))
+    // Typing preserves undo and avoids native setters that accept but ignore selected text.
+    if !field.type_text(replacement) {
+        return Replacement::Unconfirmed;
+    }
+    confirm(field, &next, deadline)
 }
 
 // The apps with a window, for the settings to add one before typing in it.
