@@ -1,6 +1,6 @@
 # prosed for the desktop
 
-The extension's grammar check, in every app on the machine. It is a [Tauri](https://tauri.app) app that reads the focused text field through the accessibility API (Accessibility on macOS, UI Automation on Windows) and sends its text to the same local Ollama server as the extension. It reuses the extension's prompts, diff and rewrite checks from `../src`.
+The extension's grammar check, in every app on the machine. It is a [Tauri](https://tauri.app) app that reads the focused text field through the accessibility API (Accessibility on macOS, UI Automation on Windows) and sends its text to Ollama or the API provider selected in settings. It reuses the extension's prompts, diff and rewrite checks from `../src`.
 
 Linux isn't supported yet. [LINUX.md](./LINUX.md) explains what is possible there and what isn't.
 
@@ -18,7 +18,7 @@ The app has no Dock icon. Its settings open when it starts, when you open it aga
 
 ## Run it
 
-Ollama must be running with the model picked in the settings (`gemma4:e2b-it-qat` by default), as for the extension.
+In local mode, Ollama must be running with the model picked in settings, `gemma4:e2b-it-qat` by default. You can also choose an API provider and enter your own key and model ID. API requests go directly from Rust to the provider. Keys stay in the system keychain; the settings file contains only provider and model preferences. See [Bring your own key](../README.md#bring-your-own-key) for setup and billing details.
 
 The Rust toolchain and the Tauri CLI come from `devenv.nix` at the repo root:
 

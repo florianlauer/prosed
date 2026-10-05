@@ -12,6 +12,7 @@ import {
 } from "../settings";
 import { send } from "../messages";
 import { GEMINI_MODEL, GEMINI_TEST_BACKEND_ERROR, geminiAvailability, geminiOptions, geminiVerify } from "../gemini";
+import { initCloudSettings } from "./cloud";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -268,6 +269,7 @@ onSettingsChange((next) => {
 const init = async () => {
   settings = await loadSettings();
   render();
+  await initCloudSettings();
 
   const [list, availability] = await Promise.all([
     send({ type: "ollama.list" }).catch(() => null),

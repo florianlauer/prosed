@@ -385,10 +385,12 @@ listen<FixAction>(
   },
 );
 
-// Drops fixes on words just added to the dictionary or changes just ignored, without a new check.
+// A provider change invalidates an in-flight answer; dictionary changes keep existing fixes.
 onSettingsChange((next) => {
+  const modelChanged = next.model !== settings.model || next.provider !== settings.provider || JSON.stringify(next.cloudConfigs) !== JSON.stringify(settings.cloudConfigs);
   settings = next;
   if (text !== null) {
-    session.refresh();
+    if (modelChanged) session.edit(text);
+    else session.refresh();
   }
 });

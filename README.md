@@ -4,7 +4,7 @@
 
 `sed for your prose.`
 
-A grammar checker that runs on your machine. It works in Chromium browsers, and a [desktop app](#desktop-app) brings it to every app on macOS and Windows. A language model on your own computer reads what you type, so the text never leaves it.
+A grammar checker for Chromium browsers and, through a [desktop app](#desktop-app), every app on macOS and Windows. Local models keep your text on your computer. You can also use your own API key to send checks and rewrites directly to a provider you choose.
 
 Mistakes are underlined in place, one click fixes one word, and the default model is small enough to leave running all day. It's free, open source, and has no account. You install it [from a release zip or from source](#install-the-extension).
 
@@ -35,10 +35,11 @@ Mistakes are underlined in place, one click fixes one word, and the default mode
 
 ## What it does
 
-You type in a text field. When you stop for half a second, the extension sends the text to a local model and asks for the smallest set of fixes: spelling, grammar, punctuation, missing accents. It keeps your language, tone and technical terms. A French Slack message about a "PR" stays French and keeps "PR".
+You type in a text field. When you stop for half a second, the extension sends the text to your selected model and asks for the smallest set of fixes: spelling, grammar, punctuation, missing accents. Local models are the default; an API provider is optional. It keeps your language, tone and technical terms. A French Slack message about a "PR" stays French and keeps "PR".
 
 - Free, no account, no ads.
 - The model runs on your machine: [Ollama](https://ollama.com) or Chrome's built-in Gemini Nano.
+- Alternatively, bring your own API key for OpenAI, Anthropic, OpenRouter, Gemini API, Mistral, Groq, DeepSeek or an OpenAI-compatible service.
 - It reads whole sentences, so it catches agreement errors and homophones ("sa" / "ça", "on" / "ont") that a word-by-word spell checker misses.
 
 ## Compared to the original extension
@@ -57,6 +58,8 @@ You type in a text field. When you stop for half a second, the extension sends t
 - The Ollama request passes a real JSON schema. Upstream passed a zod object, which recent Ollama servers reject with a 500.
 
 ## Requirements
+
+API mode needs an internet connection, a provider API key and an available model on that account. It has none of the local model hardware requirements below.
 
 You need one of the two model setups below. The extension uses Ollama by default. You can choose Gemini Nano in the settings even when Ollama is running.
 
@@ -555,7 +558,17 @@ gh release create v<version> package/prosed-<version>.zip --notes-file <notes>
 
 ## Privacy
 
-The extension sends the text of the field you're typing in to `http://127.0.0.1:11434` (your Ollama server) or to Chrome's on-device model. Nothing else, nowhere else. It collects no data and has no analytics. The settings, dictionary included, live in the browser's extension storage, which the browser syncs to your account like bookmarks when sync is on. See [PRIVACY.md](./PRIVACY.md).
+With local models, the extension sends the field's text to `http://127.0.0.1:11434`, your Ollama server, or to Chrome's on-device model. With an API provider selected, it sends the text directly to that provider. Prosed collects no data and has no analytics. Preferences, including the dictionary, use browser extension sync storage. API keys stay in local extension storage and never sync. See [PRIVACY.md](./PRIVACY.md).
+
+### Bring your own key
+
+Open settings, choose an API provider, enter its model ID and API key, then click "Save and use". For an OpenAI-compatible service, also enter the API base URL, such as `https://api.example.com/v1`. The extension asks for permission to contact that host. Remote endpoints require HTTPS; a localhost endpoint can use HTTP.
+
+"Test connection" sends a short sample to check that the key and model can return a grammar response. It may incur a small API charge. Checks and rewrites use the selected provider, and your provider account pays for those calls. If the provider fails, Prosed shows an error without switching to another provider.
+
+Each provider keeps its own key and model configuration. A blank key field keeps the saved key when you edit a model. "Remove key" deletes the credential and returns to local mode if that provider was active. Choose "Local models" to use Ollama or Gemini Nano again.
+
+The desktop uses the same provider settings and stores keys in the system keychain. Model IDs are editable because availability depends on your provider account. Suggested IDs are starting points; the connection test checks the model you enter.
 
 ## Credits and license
 

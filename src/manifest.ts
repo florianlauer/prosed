@@ -16,6 +16,7 @@ export default defineManifest({
     128: "img/icon128.png",
   },
   permissions: ["storage"],
+  optional_host_permissions: ["https://*/*", "http://*/*"],
   action: {
     default_title: "prosed settings",
     default_icon: {

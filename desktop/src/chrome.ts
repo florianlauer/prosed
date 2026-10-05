@@ -4,17 +4,55 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { Handlers, Message } from "../../src/messages.ts";
 import { version } from "../src-tauri/tauri.conf.json";
-import { getConfig, saveConfig } from "./api.ts";
+import { generateCloud, getConfig, saveConfig } from "./api.ts";
+import {
+  cloudTestPrompt,
+  cloudTestSchema,
+  verifyCloudTest,
+} from "../../src/cloud.ts";
 
 type Listener = (changes: object, area: string) => void;
 const listeners = new Set<Listener>();
 listen("config", () => listeners.forEach((listener) => listener({}, "sync")));
 
 const load = (body: object) =>
-  invoke("ollama_generate", { channel: "switch", body: { prompt: "", stream: false, ...body } });
+  invoke("ollama_generate", {
+    channel: "switch",
+    body: { prompt: "", stream: false, ...body },
+  });
 
 // The options page's messages; the rest go to the extension's service worker only.
-const handlers: Handlers<"ollama.list" | "ollama.switch"> = {
+const handlers: Handlers<
+  | "ollama.list"
+  | "ollama.switch"
+  | "cloud.keyStatus"
+  | "cloud.keySave"
+  | "cloud.keyRemove"
+  | "cloud.test"
+> = {
+  "cloud.keyStatus": async ({ provider }) => ({
+    configured: await invoke<boolean>("cloud_key_status", { provider }),
+  }),
+  "cloud.keySave": async ({ provider, apiKey }) => {
+    await invoke("cloud_key_save", { provider, apiKey });
+    return { ok: true };
+  },
+  "cloud.keyRemove": async ({ provider }) => {
+    await invoke("cloud_key_remove", { provider });
+    return { ok: true };
+  },
+  "cloud.test": async ({ provider, config, apiKey }) => {
+    const answer = await generateCloud({
+      provider,
+      config,
+      apiKey,
+      channel: "test",
+      prompt: cloudTestPrompt,
+      schema: cloudTestSchema,
+    });
+    verifyCloudTest(answer);
+    return { ok: true };
+  },
   "ollama.list": () =>
     invoke<string[]>("ollama_models").then(
       (names) => ({ models: names.map((name) => ({ name })) }),
@@ -32,14 +70,22 @@ const handlers: Handlers<"ollama.list" | "ollama.switch"> = {
 };
 
 const sendMessage = async (message: Message) => {
-  const handle = handlers[message.type as keyof typeof handlers] as ((m: Message) => Promise<unknown>) | undefined;
-  return handle ? handle(message) : null;
+  const handle = handlers[message.type as keyof typeof handlers] as
+    ((m: Message) => Promise<unknown>) | undefined;
+  try {
+    return handle ? await handle(message) : null;
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
 };
 
 globalThis.chrome = {
   storage: {
     sync: {
-      get: async (defaults: object) => ({ ...defaults, ...(await getConfig()).core }),
+      get: async (defaults: object) => ({
+        ...defaults,
+        ...(await getConfig()).core,
+      }),
       set: (changes: object) => saveConfig({ core: changes }),
     },
     onChanged: {

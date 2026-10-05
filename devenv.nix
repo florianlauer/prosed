@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
   # The desktop app (desktop/) is Tauri: Rust, plus the Windows target to check the UI Automation code from a Mac.
@@ -17,5 +17,13 @@
     pkgs.lld
     # the Windows installer
     pkgs.nsis
+  ] ++ lib.optionals pkgs.stdenv.isLinux [
+    pkgs.pkg-config
+    pkgs.gtk3
+    pkgs.webkitgtk_4_1
+    pkgs.libsoup_3
+    pkgs.librsvg
+    pkgs.dbus
+    pkgs.openssl
   ];
 }

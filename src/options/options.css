@@ -53,6 +53,10 @@ body {
   --aig-ink: #ece7dc;
 }
 
+.opt [hidden] {
+  display: none !important;
+}
+
 .opt__head {
   display: flex;
   align-items: center;
@@ -265,4 +269,38 @@ select.opt__field {
 .opt__row select.opt__field {
   flex: none;
   width: 180px;
+}
+
+.opt__cloud .opt__row {
+  margin: 12px 0;
+}
+
+.opt__cloud .opt__row input.opt__field {
+  width: 260px;
+  min-width: 0;
+}
+
+.opt__cloud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 8px;
+}
+
+.opt__cloud button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 480px) {
+  .opt__cloud .opt__row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .opt__cloud .opt__row input.opt__field,
+  .opt__cloud .opt__row select.opt__field {
+    width: 100%;
+  }
 }
