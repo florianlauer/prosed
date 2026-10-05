@@ -3,6 +3,7 @@ import { computePosition, flip, offset, Rect, shift } from "@floating-ui/dom";
 import "./overlay.css";
 import {
   addToDictionary,
+  backendChanged,
   disableSite,
   loadSettings,
   ignoreChange,
@@ -1712,7 +1713,11 @@ const main = async () => {
     resetControl();
     provider = null;
     const model = settings.model;
-    const candidates = isCloudProvider(settings.provider) ? [cloud] : model === GEMINI_MODEL ? [gemini] : [ollama, gemini];
+    const candidates = isCloudProvider(settings.provider)
+      ? [cloud]
+      : model === GEMINI_MODEL
+        ? [gemini]
+        : [ollama, gemini];
     let selected: Provider | null = null;
     for (const candidate of candidates) {
       if (await candidate.isSupported()) {
@@ -1740,7 +1745,7 @@ const main = async () => {
     }
   });
   onSettingsChange((next) => {
-    const modelChanged = next.model !== settings.model || next.provider !== settings.provider || JSON.stringify(next.cloudConfigs) !== JSON.stringify(settings.cloudConfigs);
+    const modelChanged = backendChanged(settings, next);
     const filtersChanged =
       JSON.stringify([next.dictionary, next.ignored]) !==
       JSON.stringify([settings.dictionary, settings.ignored]);

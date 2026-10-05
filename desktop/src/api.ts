@@ -1,7 +1,7 @@
 // The Rust side: settings, Ollama, and the focused field of the app being typed in.
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import type { Generate } from "../../src/check.ts";
+import type { Channel, Generate } from "../../src/check.ts";
 import { loadSettings, type Settings } from "../../src/settings.ts";
 import {
   buildCloudRequest,
@@ -92,7 +92,7 @@ export const generateCloud = async ({
 }: {
   provider: CloudProvider;
   config: CloudConfig;
-  channel: string;
+  channel: Channel;
   prompt: string;
   schema: Record<string, unknown>;
   apiKey?: string;

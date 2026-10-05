@@ -7,7 +7,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { checkIcon, powerIcon, spinnerIcon } from "../../src/contentScript/render.ts";
 import { changeOf, markedSpan, splitCheckable, type Hunk } from "../../src/contentScript/text.ts";
-import { addToDictionary, ignoreChange, loadSettings, onSettingsChange } from "../../src/settings.ts";
+import { addToDictionary, backendChanged, ignoreChange, loadSettings, onSettingsChange } from "../../src/settings.ts";
 import { CheckSession } from "../../src/session.ts";
 import { followTheme, generate, type App, type Rect } from "./api.ts";
 
@@ -387,7 +387,7 @@ listen<FixAction>(
 
 // A provider change invalidates an in-flight answer; dictionary changes keep existing fixes.
 onSettingsChange((next) => {
-  const modelChanged = next.model !== settings.model || next.provider !== settings.provider || JSON.stringify(next.cloudConfigs) !== JSON.stringify(settings.cloudConfigs);
+  const modelChanged = backendChanged(settings, next);
   settings = next;
   if (text !== null) {
     if (modelChanged) session.edit(text);

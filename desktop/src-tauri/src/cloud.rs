@@ -2,7 +2,7 @@ use keyring::Entry;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{State, WebviewWindow};
 
@@ -129,6 +129,23 @@ fn validate_url(request: &CloudRequest) -> Result<reqwest::Url, String> {
     Ok(url)
 }
 
+fn validate_saved_url(request: &CloudRequest, core: &Value) -> Result<(), String> {
+    let url = validate_url(request)?;
+    if request.provider != "custom" {
+        return Ok(());
+    }
+    let base = core
+        .pointer("/cloudConfigs/custom/baseUrl")
+        .and_then(Value::as_str)
+        .and_then(|base| reqwest::Url::parse(base.trim()).ok())
+        .ok_or("Configure this API provider in settings.")?;
+    let expected = format!("{}/chat/completions", base.as_str().trim_end_matches('/'));
+    if url.as_str() != expected {
+        return Err("The API URL doesn't match the saved custom endpoint.".into());
+    }
+    Ok(())
+}
+
 async fn post(request: CloudRequest, api_key: String) -> Result<Value, String> {
     let url = validate_url(&request)?;
     let key = valid_key(&api_key)?;
@@ -179,6 +196,7 @@ async fn post(request: CloudRequest, api_key: String) -> Result<Value, String> {
 pub async fn cloud_send(
     window: WebviewWindow,
     requests: State<'_, Requests>,
+    shared: State<'_, Arc<crate::Shared>>,
     channel: String,
     request: CloudRequest,
     api_key: Option<String>,
@@ -189,7 +207,14 @@ pub async fn cloud_send(
             settings_only(&window)?;
             key
         }
-        None => read_key(&request.provider)?,
+        None => {
+            // Only settings may test a draft endpoint with a saved key.
+            if window.label() != "settings" {
+                let config = shared.config.lock().unwrap();
+                validate_saved_url(&request, &config.core)?;
+            }
+            read_key(&request.provider)?
+        }
     };
     let task = tokio::spawn(post(request, key));
     let channel = format!("{}:{channel}", window.label());
@@ -243,6 +268,34 @@ mod tests {
         ))
         .is_ok());
         assert!(validate_url(&request("gemini-api", "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent")).is_ok());
+    }
+
+    #[test]
+    fn saved_custom_keys_only_allow_the_configured_endpoint() {
+        let core = serde_json::json!({
+            "cloudConfigs": { "custom": { "baseUrl": " https://api.example.com:443/v1/// " } }
+        });
+        for url in [
+            "https://evil.example/v1/chat/completions",
+            "https://api.example.com/other/chat/completions",
+        ] {
+            assert!(validate_saved_url(&request("custom", url), &core).is_err());
+        }
+        assert!(validate_saved_url(
+            &request("custom", "https://api.example.com/v1/chat/completions"),
+            &core
+        )
+        .is_ok());
+        assert!(validate_saved_url(
+            &request("custom", "https://api.example.com/v1/chat/completions"),
+            &Value::Null
+        )
+        .is_err());
+        assert!(validate_saved_url(
+            &request("openai", "https://api.openai.com/v1/chat/completions"),
+            &Value::Null
+        )
+        .is_ok());
     }
 
     #[test]

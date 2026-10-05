@@ -107,7 +107,7 @@ const handlers: Handlers<keyof Messages> = {
       apiKey: apiKey?.trim() || (await getCloudKey(provider)),
       prompt: cloudTestPrompt,
       schema: cloudTestSchema,
-      signal: restart(sender, "fix"),
+      signal: restart(sender, "test"),
     });
     verifyCloudTest(answer);
     return { ok: true };

@@ -15,7 +15,7 @@ import type { Settings } from "./settings.ts";
 import { keepUserText, languageOf, prepareRewrite, splitCheckable } from "./contentScript/text.ts";
 
 // A new request on a channel cancels the previous one on that channel, in the same tab or window.
-export type Channel = "check" | "fix" | "rewrite" | "meter";
+export type Channel = "check" | "fix" | "rewrite" | "meter" | "test";
 
 // The model's parsed JSON answer to `prompt`, shaped by `schema`. Gemini has one model and ignores `model`.
 export type Generate = (request: {

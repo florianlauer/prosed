@@ -269,15 +269,17 @@ onSettingsChange((next) => {
 const init = async () => {
   settings = await loadSettings();
   render();
-  await initCloudSettings();
-
-  const [list, availability] = await Promise.all([
-    send({ type: "ollama.list" }).catch(() => null),
-    geminiAvailability(),
+  await Promise.all([
+    initCloudSettings(),
+    Promise.all([
+      send({ type: "ollama.list" }).catch(() => null),
+      geminiAvailability(),
+    ]).then(([list, availability]) => {
+      models = list ? list.models.map((m) => m.name).sort() : null;
+      gemini = availability;
+      renderModel();
+    }),
   ]);
-  models = list ? list.models.map((m) => m.name).sort() : null;
-  gemini = availability;
-  renderModel();
 };
 
 init();

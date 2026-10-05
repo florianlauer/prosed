@@ -54,6 +54,11 @@ export const loadSettings = async (): Promise<Settings> => {
 export const saveSettings = (changes: Partial<Settings>) =>
   chrome.storage.sync.set(changes);
 
+export const backendChanged = (previous: Settings, next: Settings) =>
+  previous.model !== next.model ||
+  previous.provider !== next.provider ||
+  JSON.stringify(previous.cloudConfigs) !== JSON.stringify(next.cloudConfigs);
+
 export const onSettingsChange = (listener: (settings: Settings) => void) => {
   const handle = (_: unknown, area: string) => {
     if (area === "sync") {
