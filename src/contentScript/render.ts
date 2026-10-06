@@ -1,5 +1,6 @@
 // The DOM pieces of the popovers that the desktop app draws too.
 import { diffSegments, type Hunk } from "./text";
+import { localize } from "../i18n/dom.ts";
 
 // Lucide paths, stroked with currentColor so the trigger's state sets the colour.
 export const checkIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>`;
@@ -17,7 +18,7 @@ export function renderChange(removed: string, added: string, onClick: () => void
   chunk.className = "aig-change";
   chunk.role = "button";
   chunk.tabIndex = 0;
-  chunk.title = "Apply this change";
+  localize(chunk, "applyChange", {}, "title");
   chunk.addEventListener("click", onClick);
   chunk.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {

@@ -17,7 +17,15 @@ import {
   requireCloudSettingsSender,
   saveCloudKey,
 } from "../cloudCredentials.ts";
-import { loadSettings } from "../settings.ts";
+import { loadSettings, onSettingsChange } from "../settings.ts";
+import { setLocale, t } from "../i18n/index.ts";
+
+const translateAction = async () => {
+  setLocale((await loadSettings()).uiLocale);
+  await chrome.action.setTitle({ title: t("settingsTitle") });
+};
+void translateAction();
+onSettingsChange(() => void translateAction());
 
 // One per tab and kind of request, so a new check cancels the previous check in the same
 // tab but not a rewrite the user is waiting for, nor another tab's request.

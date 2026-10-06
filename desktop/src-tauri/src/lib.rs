@@ -546,6 +546,17 @@ fn show_settings(app: AppHandle) {
     open_settings(&app);
 }
 
+struct UiMenu {
+    settings: MenuItem<tauri::Wry>,
+    quit: MenuItem<tauri::Wry>,
+}
+
+#[tauri::command]
+fn set_ui_labels(menu: tauri::State<'_, UiMenu>, settings: String, quit: String) -> Result<(), String> {
+    menu.settings.set_text(settings).map_err(|e| e.to_string())?;
+    menu.quit.set_text(quit).map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 fn permission(prompt: bool) -> bool {
     platform::trusted(prompt)
@@ -635,6 +646,7 @@ pub fn run() {
             set_overlay_clickable,
             running_apps,
             show_settings,
+            set_ui_labels,
             ollama::ollama_generate,
             ollama::ollama_models,
             cloud::cloud_send,
@@ -678,13 +690,10 @@ pub fn run() {
             app.manage(shared);
             register_shortcut(&handle, &config.lock().unwrap());
 
-            let menu = Menu::with_items(
-                app,
-                &[
-                    &MenuItem::with_id(app, "settings", "Settings…", true, None::<&str>)?,
-                    &MenuItem::with_id(app, "quit", "Quit prosed", true, None::<&str>)?,
-                ],
-            )?;
+            let settings_item = MenuItem::with_id(app, "settings", "Settings…", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "Quit prosed", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&settings_item, &quit_item])?;
+            app.manage(UiMenu { settings: settings_item, quit: quit_item });
             let tray = TrayIconBuilder::new();
             // a template image: macOS draws it black or white to match the menu bar
             #[cfg(target_os = "macos")]

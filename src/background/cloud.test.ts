@@ -28,8 +28,12 @@ test("the service worker routes grammar, rewrite and meter requests through save
   const originalChrome = globalThis.chrome;
   const originalFetch = globalThis.fetch;
   globalThis.chrome = {
-    action: { onClicked: { addListener() {} } },
+    action: {
+      setTitle: async () => {},
+      onClicked: { addListener() {} },
+    },
     storage: {
+      onChanged: { addListener() {}, removeListener() {} },
       local: {
         setAccessLevel: async () => {},
         get: async (key: string) => ({ [key]: local[key] }),

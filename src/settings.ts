@@ -2,6 +2,7 @@
 // ponytail: sync storage caps an item at 8 KB, a few hundred dictionary words or ignored
 // changes; move those lists to storage.local if people outgrow that.
 import type { CloudConfig, CloudProvider } from "./cloud.ts";
+import { isUiLocale, type UiLocale } from "./i18n/index.ts";
 
 // A change as whole words, e.g. "review" → "révision".
 export type Change = { from: string; to: string };
@@ -18,6 +19,7 @@ export type Settings = {
   provider: "local" | CloudProvider;
   // Credentials live separately in local storage or the desktop OS keychain.
   cloudConfigs: Partial<Record<CloudProvider, CloudConfig>>;
+  uiLocale: UiLocale;
   // Picked with bench/grammar-bench.mjs: best accuracy on French typos under 5 GB.
   model: string;
   // Words the extension never changes, matched as whole words with their exact case.
@@ -32,6 +34,7 @@ export type Settings = {
 export const defaultSettings: Settings = {
   provider: "local",
   cloudConfigs: {},
+  uiLocale: "system",
   model: "gemma4:e2b-it-qat",
   dictionary: [],
   disabledSites: [],
@@ -47,6 +50,7 @@ export const loadSettings = async (): Promise<Settings> => {
   return {
     ...defaultSettings,
     ...stored,
+    uiLocale: isUiLocale(stored.uiLocale) ? stored.uiLocale : "system",
     style: { ...defaultSettings.style, ...stored.style },
   };
 };
