@@ -1,5 +1,5 @@
 // Linux and the rest: no field reading yet, see desktop/LINUX.md.
-use super::{App, Rect};
+use super::{App, Rect, Replacement};
 
 pub type Pid = u32;
 
@@ -40,6 +40,9 @@ impl Field {
     }
     pub fn replace(&self, _start: usize, _end: usize, _replacement: &str) -> bool {
         false
+    }
+    pub fn replace_outcome(&self, _start: usize, _end: usize, _replacement: &str) -> Replacement {
+        Replacement::Untouched
     }
 }
 

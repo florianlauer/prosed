@@ -1,4 +1,4 @@
-use super::{splice, App, Rect};
+use super::{splice, App, Rect, Replacement};
 use accessibility_sys::*;
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::{CFType, TCFType};
@@ -14,6 +14,7 @@ use objc2_app_kit::{NSApplicationActivationPolicy, NSRunningApplication, NSWorks
 use std::collections::HashSet;
 use std::ffi::c_void;
 use std::ptr;
+use std::time::{Duration, Instant};
 
 // Roles of the elements people type prose in. A contenteditable in Chromium and Electron is an AXTextArea too.
 pub type Pid = i32;
@@ -58,6 +59,13 @@ fn copy_attribute(element: AXUIElementRef, name: &str) -> Option<CFType> {
 fn set_attribute(element: AXUIElementRef, name: &str, value: &CFType) -> bool {
     let name = CFString::new(name);
     unsafe { AXUIElementSetAttributeValue(element, name.as_concrete_TypeRef(), value.as_CFTypeRef()) == kAXErrorSuccess }
+}
+
+fn attribute_settable(element: AXUIElementRef, name: &str) -> Option<bool> {
+    let name = CFString::new(name);
+    let mut settable = 0;
+    let error = unsafe { AXUIElementIsAttributeSettable(element, name.as_concrete_TypeRef(), &mut settable) };
+    (error == kAXErrorSuccess).then_some(settable != 0)
 }
 
 fn string(value: &CFType) -> Option<String> {
@@ -246,32 +254,113 @@ impl Field {
         Some((r.location as usize, (r.location + r.length) as usize))
     }
 
-    // Selects the range and replaces the selected text, which keeps the app's undo. Chromium
-    // takes the selection but silently ignores the new text, so it gets typed instead. Apps that
-    // refuse the selection get their whole value set.
     pub fn replace(&self, start: usize, end: usize, replacement: &str) -> bool {
-        let Some(next) = self.text().and_then(|t| splice(&t, start, end, replacement)) else {
-            return false;
-        };
-        if set_attribute(self.0, kAXSelectedTextRangeAttribute, &range_value(start, end)) {
-            if set_attribute(self.0, kAXSelectedTextAttribute, &CFString::new(replacement).as_CFType()) && self.reads(&next) {
-                return true;
-            }
-            return crate::keys::type_text(replacement);
-        }
-        set_attribute(self.0, kAXValueAttribute, &CFString::new(&next).as_CFType())
+        self.replace_outcome(start, end, replacement) == Replacement::Applied
     }
 
-    // Whether the field shows `text`, giving an app that applies edits late a moment.
-    fn reads(&self, text: &str) -> bool {
-        for _ in 0..3 {
-            if self.text().as_deref() == Some(text) {
-                return true;
-            }
-            std::thread::sleep(std::time::Duration::from_millis(40));
-        }
-        false
+    pub fn replace_outcome(&self, start: usize, end: usize, replacement: &str) -> Replacement {
+        replace_outcome(self, start, end, replacement)
     }
+}
+
+// Setter booleans acknowledge the AX request, not the resulting selection or text.
+trait EditableField {
+    fn text(&self) -> Option<String>;
+    fn selection(&self) -> Option<(usize, usize)>;
+    fn focused(&self) -> bool;
+    fn can_set_text(&self) -> bool;
+    fn select(&self, start: usize, end: usize) -> bool;
+    fn set_text(&self, text: &str) -> bool;
+    fn type_text(&self, text: &str) -> bool;
+}
+
+impl EditableField for Field {
+    fn text(&self) -> Option<String> {
+        Field::text(self)
+    }
+
+    fn selection(&self) -> Option<(usize, usize)> {
+        Field::selection(self)
+    }
+
+    fn focused(&self) -> bool {
+        // System-wide focus reads can fail while the frontmost app exposes its focused field.
+        let mut platform = Platform::new();
+        platform.frontmost()
+            .and_then(|(_, pid)| platform.focused(pid))
+            .is_some_and(|focused| platform.same(self, &focused))
+    }
+
+    fn select(&self, start: usize, end: usize) -> bool {
+        set_attribute(self.0, kAXSelectedTextRangeAttribute, &range_value(start, end))
+    }
+
+    fn can_set_text(&self) -> bool {
+        attribute_settable(self.0, kAXValueAttribute) == Some(true)
+    }
+
+    fn set_text(&self, text: &str) -> bool {
+        set_attribute(self.0, kAXValueAttribute, &CFString::new(text).as_CFType())
+    }
+
+    fn type_text(&self, text: &str) -> bool {
+        crate::keys::type_text(text)
+    }
+}
+
+fn wait_until(deadline: Instant, mut ready: impl FnMut() -> bool) -> bool {
+    loop {
+        if ready() {
+            return true;
+        }
+        if Instant::now() >= deadline {
+            return false;
+        }
+        std::thread::sleep(Duration::from_millis(20).min(deadline.saturating_duration_since(Instant::now())));
+    }
+}
+
+fn confirm(field: &impl EditableField, next: &str, deadline: Instant) -> Replacement {
+    if wait_until(deadline, || field.text().as_deref() == Some(next)) {
+        Replacement::Applied
+    } else {
+        Replacement::Unconfirmed
+    }
+}
+
+fn replace_outcome(field: &impl EditableField, start: usize, end: usize, replacement: &str) -> Replacement {
+    let deadline = Instant::now() + Duration::from_millis(900);
+    let Some(original) = field.text() else { return Replacement::Untouched };
+    let Some(next) = splice(&original, start, end, replacement) else { return Replacement::Untouched };
+    if original == next {
+        return Replacement::Applied;
+    }
+    if Instant::now() >= deadline {
+        return Replacement::Untouched;
+    }
+    if !field.select(start, end) {
+        if !field.can_set_text()
+            || field.text().as_deref() != Some(original.as_str())
+            || !field.focused()
+            || Instant::now() >= deadline
+        {
+            return Replacement::Untouched;
+        }
+        let _ = field.set_text(&next);
+        return confirm(field, &next, deadline);
+    }
+    if !wait_until(deadline, || field.selection() == Some((start, end)))
+        || field.text().as_deref() != Some(original.as_str())
+        || !field.focused()
+        || Instant::now() >= deadline
+    {
+        return Replacement::Untouched;
+    }
+    // Typing preserves undo and avoids native setters that accept but ignore selected text.
+    if !field.type_text(replacement) {
+        return Replacement::Unconfirmed;
+    }
+    confirm(field, &next, deadline)
 }
 
 // The apps with a window, for the settings to add one before typing in it.
@@ -311,3 +400,7 @@ pub fn open_permission_settings() {
         .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
         .spawn();
 }
+
+#[cfg(test)]
+#[path = "macos_tests.rs"]
+mod tests;

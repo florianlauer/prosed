@@ -3,7 +3,7 @@
 // ponytail: it polls the focused field every 200 ms instead of subscribing to AX and UIA
 // events, which differ per app; subscribe if polling ever costs noticeable CPU.
 use crate::config::Config;
-use crate::platform::{self, slice, App, Field, Pid, Platform, Rect};
+use crate::platform::{self, slice, App, Field, Pid, Platform, Rect, Replacement};
 use serde::Serialize;
 use std::sync::mpsc::{channel, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex};
@@ -25,9 +25,8 @@ pub enum Command {
     // makes the field being checked the target of a rewrite opened from the card, if it is
     // still `field`; otherwise the rewrite has no target and replaces nothing
     Target { field: u64 },
-    // None when the target lost the focus or the selection changed, Some(false) when the
-    // field refused the new text
-    ReplaceSelection { selection: Selection, text: String, reply: Sender<Option<bool>> },
+    // None when the target or source text changed; otherwise reports whether an edit was sent.
+    ReplaceSelection { selection: Selection, text: String, reply: Sender<Option<Replacement>> },
     // whether the target app, and its field if it exposes one, still has the focus, before
     // pasting into it
     OnTarget { reply: Sender<bool> },
@@ -154,7 +153,7 @@ impl Worker {
             Command::ReplaceSelection { selection, text, reply } => {
                 let outcome = self.target_field().and_then(|f| {
                     let current = f.text().and_then(|t| slice(&t, selection.start, selection.end));
-                    (current.as_deref() == Some(selection.text.as_str())).then(|| f.replace(selection.start, selection.end, &text))
+                    (current.as_deref() == Some(selection.text.as_str())).then(|| f.replace_outcome(selection.start, selection.end, &text))
                 });
                 let _ = reply.send(outcome);
             }

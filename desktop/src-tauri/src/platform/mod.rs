@@ -5,6 +5,15 @@
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Replacement {
+    Applied,
+    // No text-edit request was sent; a verified clipboard fallback is still safe.
+    Untouched,
+    // An edit was sent and may still arrive, so it must not be retried.
+    Unconfirmed,
+}
+
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "macos")]
