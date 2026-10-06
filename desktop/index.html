@@ -10,114 +10,213 @@
         <img src="/src-tauri/icons/128x128.png" alt="" width="40" height="40" />
         <div class="opt__brand">
           <h1 class="opt__name">prosed</h1>
-          <p class="opt__tagline">sed for your prose.</p>
+          <p class="opt__tagline" data-i18n="tagline">sed for your prose.</p>
           <p class="opt__meta" id="version"></p>
         </div>
       </header>
 
-      <section class="opt__section" id="permission" aria-labelledby="permission-title" hidden>
-        <h2 id="permission-title">Accessibility access</h2>
-        <p class="opt__hint">
-          prosed reads the field you type in and puts fixes in place through macOS Accessibility. Turn on prosed in the
-          list, then come back here.
+      <section
+        class="opt__section"
+        id="permission"
+        aria-labelledby="permission-title"
+        hidden
+      >
+        <h2 id="permission-title" data-i18n="accessibility">
+          Accessibility access
+        </h2>
+        <p class="opt__hint" data-i18n="accessibilityHint">
+          prosed reads the field you type in and puts fixes in place through
+          macOS Accessibility. Turn on prosed in the list, then come back here.
         </p>
-        <div><button class="opt__button" id="grant" type="button">Open Accessibility settings</button></div>
+        <div>
+          <button
+            class="opt__button"
+            id="grant"
+            type="button"
+            data-i18n="openAccessibility"
+          >
+            Open Accessibility settings
+          </button>
+        </div>
+      </section>
+
+      <section class="opt__section" aria-labelledby="language-title">
+        <h2 id="language-title" data-i18n="interfaceLanguage">
+          Interface language
+        </h2>
+        <p class="opt__hint" data-i18n="languageHint">
+          The language of menus and buttons. Your text keeps its own language.
+        </p>
+        <select
+          id="ui-locale"
+          class="opt__field"
+          aria-labelledby="language-title"
+        >
+          <option value="system" data-i18n="systemLanguage">
+            Follow browser or system
+          </option>
+          <option value="en" lang="en">English</option>
+          <option value="fr" lang="fr">Français</option>
+          <option value="de" lang="de">Deutsch</option>
+          <option value="es" lang="es">Español</option>
+          <option value="it" lang="it">Italiano</option>
+        </select>
       </section>
 
       <section class="opt__section" aria-labelledby="model-title">
-        <h2 id="model-title">Model</h2>
+        <h2 id="model-title" data-i18n="model">Model</h2>
         <p
           class="opt__hint"
           id="model-status"
-          data-offline="Ollama isn't reachable. Start it to check your text and pick a model here."
+          data-platform="desktop"
+          data-i18n="lookingForOllama"
         >
           Looking for Ollama…
         </p>
-        <select id="model" class="opt__field" aria-labelledby="model-title"></select>
+        <select
+          id="model"
+          class="opt__field"
+          aria-labelledby="model-title"
+        ></select>
         <p class="opt__load" id="model-load" role="status" hidden></p>
       </section>
 
       <section class="opt__section" aria-labelledby="dictionary-title">
-        <h2 id="dictionary-title">Dictionary</h2>
-        <p class="opt__hint">
-          Words prosed never changes, such as names and jargon. Case counts: “Sencrop” is kept, “sencrop” is
-          still corrected.
+        <h2 id="dictionary-title" data-i18n="dictionary">Dictionary</h2>
+        <p class="opt__hint" data-i18n="dictionaryHint">
+          Words prosed never changes, such as names and jargon. Case counts:
+          “Sencrop” is kept, “sencrop” is still corrected.
         </p>
         <form class="opt__add" id="dictionary-form">
           <input
             class="opt__field"
             name="value"
             placeholder="Add a word"
+            data-i18n-placeholder="addWordPlaceholder"
             aria-label="Word to add"
+            data-i18n-aria-label="wordToAdd"
             autocomplete="off"
             spellcheck="false"
             required
           />
-          <button class="opt__button" type="submit">Add</button>
+          <button class="opt__button" type="submit" data-i18n="add">Add</button>
         </form>
-        <ul class="opt__list" id="dictionary" data-empty="No words yet. Add one here or from a suggestion."></ul>
+        <ul
+          class="opt__list"
+          id="dictionary"
+          data-empty="No words yet. Add one here or from a suggestion."
+          data-i18n-empty="dictionaryEmpty"
+        ></ul>
       </section>
 
       <section class="opt__section" id="style" aria-labelledby="style-title">
-        <h2 id="style-title">Style</h2>
-        <p class="opt__hint">Choices the model can't guess from one message.</p>
+        <h2 id="style-title" data-i18n="style">Style</h2>
+        <p class="opt__hint" data-i18n="styleHint">
+          Choices the model can't guess from one message.
+        </p>
         <label class="opt__row">
-          <span>French: address the reader as</span>
+          <span data-i18n="frenchAddress">French: address the reader as</span>
           <select class="opt__field" name="address">
-            <option value="any">Leave as written</option>
+            <option value="any" data-i18n="leaveAsWritten">
+              Leave as written
+            </option>
             <option value="tu">tu</option>
             <option value="vous">vous</option>
           </select>
         </label>
         <label class="opt__row">
-          <span>English spelling</span>
+          <span data-i18n="englishSpelling">English spelling</span>
           <select class="opt__field" name="english">
-            <option value="any">Leave as written</option>
-            <option value="us">US (color)</option>
-            <option value="uk">UK (colour)</option>
+            <option value="any" data-i18n="leaveAsWritten">
+              Leave as written
+            </option>
+            <option value="us" data-i18n="spellingUS">US (color)</option>
+            <option value="uk" data-i18n="spellingUK">UK (colour)</option>
           </select>
         </label>
         <label class="opt__row">
-          <span>Informal words like “du coup”</span>
+          <span data-i18n="informalWords">Informal words like “du coup”</span>
           <select class="opt__field" name="informal">
-            <option value="keep">Keep them</option>
-            <option value="fix">Count as mistakes</option>
+            <option value="keep" data-i18n="keepInformal">Keep them</option>
+            <option value="fix" data-i18n="fixInformal">
+              Count as mistakes
+            </option>
           </select>
         </label>
       </section>
 
       <section class="opt__section" aria-labelledby="ignored-title">
-        <h2 id="ignored-title">Ignored changes</h2>
-        <p class="opt__hint">Changes you refused with “Ignore” on a suggestion. They aren't suggested again, in any app.</p>
-        <ul class="opt__list" id="ignored" data-empty="Nothing ignored yet."></ul>
+        <h2 id="ignored-title" data-i18n="ignoredChanges">Ignored changes</h2>
+        <p class="opt__hint" data-i18n="ignoredHintDesktop">
+          Changes you refused with “Ignore” on a suggestion. They aren't
+          suggested again, in any app.
+        </p>
+        <ul
+          class="opt__list"
+          id="ignored"
+          data-empty="Nothing ignored yet."
+          data-i18n-empty="ignoredEmpty"
+        ></ul>
       </section>
 
       <section class="opt__section" aria-labelledby="checking-title">
-        <h2 id="checking-title">Checking</h2>
-        <label class="opt__check"><input type="checkbox" id="check" /> Underline mistakes as I type</label>
+        <h2 id="checking-title" data-i18n="checking">Checking</h2>
+        <label class="opt__check"
+          ><input type="checkbox" id="check" />
+          <span data-i18n="underlineAsYouType"
+            >Underline mistakes as I type</span
+          ></label
+        >
         <label class="opt__check">
-          <input type="checkbox" id="shortcut-enabled" /> Rewrite the selection with a shortcut
+          <input type="checkbox" id="shortcut-enabled" />
+          <span data-i18n="shortcutEnabled"
+            >Rewrite the selection with a shortcut</span
+          >
         </label>
         <label class="opt__row">
-          <span>Shortcut</span>
-          <input class="opt__field" id="shortcut" autocomplete="off" spellcheck="false" />
+          <span data-i18n="shortcut">Shortcut</span>
+          <input
+            class="opt__field"
+            id="shortcut"
+            autocomplete="off"
+            spellcheck="false"
+          />
         </label>
-        <p class="opt__hint">
-          Select text in any app and press the shortcut: a card shows the fixed text and rewrites in several tones.
+        <p class="opt__hint" data-i18n="shortcutHint">
+          Select text in any app and press the shortcut: a card shows the fixed
+          text and rewrites in several tones.
         </p>
       </section>
 
       <section class="opt__section" aria-labelledby="apps-title">
-        <h2 id="apps-title">Apps</h2>
-        <p class="opt__hint">
-          prosed checks the apps that are checked here. An app shows up once you've typed in it, or add one that's
-          open. Browsers start unchecked, since the extension already checks them.
+        <h2 id="apps-title" data-i18n="apps">Apps</h2>
+        <p class="opt__hint" data-i18n="appsHint">
+          prosed checks the apps that are checked here. An app shows up once
+          you've typed in it, or add one that's open. Browsers start unchecked,
+          since the extension already checks them.
         </p>
         <form class="opt__add" id="apps-form">
-          <select class="opt__field" id="running" aria-label="Open app to add"></select>
-          <button class="opt__button" id="add-app" type="submit">Add</button>
+          <select
+            class="opt__field"
+            id="running"
+            aria-label="Open app to add"
+            data-i18n-aria-label="openAppToAdd"
+          ></select>
+          <button
+            class="opt__button"
+            id="add-app"
+            type="submit"
+            data-i18n="add"
+          >
+            Add
+          </button>
         </form>
-        <ul class="opt__list" id="apps" data-empty="No apps yet."></ul>
+        <ul
+          class="opt__list"
+          id="apps"
+          data-empty="No apps yet."
+          data-i18n-empty="appsEmpty"
+        ></ul>
       </section>
     </main>
     <script type="module" src="/src/settings.ts"></script>
