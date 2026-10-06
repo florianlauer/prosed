@@ -11,14 +11,30 @@ import {
   Style,
 } from "../settings";
 import { send } from "../messages";
-import { GEMINI_MODEL, GEMINI_TEST_BACKEND_ERROR, geminiAvailability, geminiOptions, geminiVerify } from "../gemini";
+import {
+  getLocale,
+  isUiLocale,
+  setLocale,
+  t,
+  type MessageKey,
+} from "../i18n/index.ts";
+import { localize, translateElements, unlocalize } from "../i18n/dom.ts";
+import {
+  GEMINI_MODEL,
+  GEMINI_TEST_BACKEND_ERROR,
+  geminiAvailability,
+  geminiOptions,
+  geminiVerify,
+} from "../gemini";
 
-const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+const $ = <T extends HTMLElement>(id: string) =>
+  document.getElementById(id) as T;
 
-document.querySelector("main")!.dataset.theme = matchMedia("(prefers-color-scheme: dark)").matches
+document.querySelector("main")!.dataset.theme = matchMedia(
+  "(prefers-color-scheme: dark)",
+).matches
   ? "dark"
   : "light";
-$("version").textContent = `Version ${chrome.runtime.getManifest().version}`;
 
 // Accepts a pasted URL as well as a bare hostname.
 const hostnameOf = (value: string) => {
@@ -29,18 +45,18 @@ const hostnameOf = (value: string) => {
   }
 };
 
-const renderList = <T,>({
+const renderList = <T>({
   list,
   items,
   onRemove,
   text = String,
-  action = "Remove",
+  action = "remove",
 }: {
   list: HTMLUListElement;
   items: T[];
   onRemove: (item: T) => void;
   text?: (item: T) => string;
-  action?: string;
+  action?: "remove" | "restore";
 }) => {
   list.replaceChildren(
     ...items.map((item) => {
@@ -50,8 +66,13 @@ const renderList = <T,>({
       const remove = document.createElement("button");
       remove.type = "button";
       remove.className = "aig-link";
-      remove.textContent = action;
-      remove.ariaLabel = `${action} ${text(item)}`;
+      localize(remove, action, { item: text(item) });
+      localize(
+        remove,
+        action === "remove" ? "removeItem" : "restoreItem",
+        { item: text(item) },
+        "aria-label",
+      );
       remove.addEventListener("click", () => onRemove(item));
       li.append(label, remove);
       return li;
@@ -74,7 +95,7 @@ const bindAdd = ({
     e.preventDefault();
     const item = parse(input.value.trim());
     if (!item) {
-      input.setCustomValidity("That doesn't look like a site.");
+      input.setCustomValidity(t("invalidSite"));
       input.reportValidity();
       return;
     }
@@ -88,28 +109,28 @@ let models: string[] | null = null;
 let switching = false;
 let gemini: Availability = "unavailable";
 
-const geminiLabels: Record<Availability, string> = {
-  available: "",
-  downloadable: " (download required)",
-  downloading: " (downloading)",
-  unavailable: " (unavailable)",
+const geminiLabels: Record<Availability, MessageKey> = {
+  available: "geminiAvailableOption",
+  downloadable: "geminiDownloadRequiredOption",
+  downloading: "geminiDownloadingOption",
+  unavailable: "geminiUnavailableOption",
 };
 
-const modelStatus = () => {
+const modelStatus = (): MessageKey => {
   if (settings.model === GEMINI_MODEL) {
-    if (gemini === "available") return "Gemini Nano runs locally in Chrome. Your text stays on this device.";
-    if (gemini === "unavailable") return "Gemini Nano isn't available in this browser. Choose an installed Ollama model.";
-    return "Select Gemini Nano to finish downloading the model in Chrome.";
+    if (gemini === "available") return "geminiLocalHint";
+    if (gemini === "unavailable") return "geminiUnavailableHint";
+    return "geminiDownloadHint";
   }
   if (models === null) {
-    const offline = $("model-status").dataset.offline;
-    if (offline !== undefined) return offline;
-    if (gemini === "available") return "Ollama isn't reachable. Checks use Gemini Nano in Chrome. You can select it here.";
-    if (gemini !== "unavailable") return "Ollama isn't reachable. Select Gemini Nano to download Chrome's local model.";
-    return "No model is available. Start Ollama, or use Chrome on a device that supports Gemini Nano.";
+    if ($("model-status").dataset.platform === "desktop")
+      return "modelOfflineDesktop";
+    if (gemini === "available") return "ollamaOfflineGeminiReady";
+    if (gemini !== "unavailable") return "ollamaOfflineGeminiDownload";
+    return "noModelAvailable";
   }
-  if (models.length === 0) return "Ollama is running but has no models. Pull one with “ollama pull gemma4:e2b-it-qat”.";
-  return "The Ollama model used for every check. Larger models are slower but catch more.";
+  if (models.length === 0) return "modelEmpty";
+  return "modelHint";
 };
 
 const renderModel = () => {
@@ -125,10 +146,10 @@ const renderModel = () => {
     ...options.map((name) => {
       const option = new Option(name, name, false, name === settings.model);
       if (name === GEMINI_MODEL) {
-        option.textContent = `Gemini Nano · Chrome${geminiLabels[gemini]}`;
+        localize(option, geminiLabels[gemini]);
         option.disabled = gemini === "unavailable";
       } else if (models && !models.includes(name)) {
-        option.textContent = `${name} (not installed)`;
+        localize(option, "modelNotInstalled", { model: name });
         option.disabled = true;
       }
       return option;
@@ -139,27 +160,44 @@ const renderModel = () => {
   if (download) {
     download.hidden = gemini !== "downloadable" && gemini !== "downloading";
     download.disabled = switching;
-    download.textContent =
-      gemini === "downloading"
-        ? "Finish downloading Gemini Nano"
-        : "Download Gemini Nano";
+    localize(
+      download,
+      gemini === "downloading" ? "finishGeminiDownload" : "downloadGemini",
+    );
   }
-  $("model-status").textContent = modelStatus();
+  localize($("model-status"), modelStatus());
 };
 
 const render = () => {
+  setLocale(settings.uiLocale);
+  document.documentElement.lang = getLocale();
+  translateElements(document);
+  localize($("version"), "version", {
+    version: chrome.runtime.getManifest().version,
+  });
+  $<HTMLSelectElement>("ui-locale").value = settings.uiLocale;
+  const siteInput =
+    document.querySelector<HTMLInputElement>("#sites-form input");
+  if (siteInput?.validity.customError)
+    siteInput.setCustomValidity(t("invalidSite"));
   renderModel();
   renderList({
     list: $("dictionary"),
     items: settings.dictionary,
-    onRemove: (word) => saveSettings({ dictionary: settings.dictionary.filter((w) => w !== word) }),
+    onRemove: (word) =>
+      saveSettings({
+        dictionary: settings.dictionary.filter((w) => w !== word),
+      }),
   });
   renderList({
     list: $("ignored"),
     items: settings.ignored,
-    text: ({ from, to }) => `${from || "(nothing)"} → ${to || "(nothing)"}`,
-    action: "Restore",
-    onRemove: (change) => saveSettings({ ignored: settings.ignored.filter((c) => !sameChange(c, change)) }),
+    text: ({ from, to }) => `${from || t("nothing")} → ${to || t("nothing")}`,
+    action: "restore",
+    onRemove: (change) =>
+      saveSettings({
+        ignored: settings.ignored.filter((c) => !sameChange(c, change)),
+      }),
   });
   for (const select of styleSelects) {
     select.value = settings.style[select.name as keyof Style];
@@ -169,12 +207,23 @@ const render = () => {
     renderList({
       list: $("sites"),
       items: settings.disabledSites,
-      onRemove: (site) => saveSettings({ disabledSites: settings.disabledSites.filter((s) => s !== site) }),
+      onRemove: (site) =>
+        saveSettings({
+          disabledSites: settings.disabledSites.filter((s) => s !== site),
+        }),
     });
   }
 };
 
-const styleSelects = document.querySelectorAll<HTMLSelectElement>("#style select");
+const styleSelects =
+  document.querySelectorAll<HTMLSelectElement>("#style select");
+$<HTMLSelectElement>("ui-locale").addEventListener("change", (e) => {
+  const uiLocale = (e.target as HTMLSelectElement).value;
+  if (isUiLocale(uiLocale)) void saveSettings({ uiLocale });
+});
+window.addEventListener("languagechange", () => {
+  if (settings) render();
+});
 for (const select of styleSelects) {
   select.addEventListener("change", () =>
     saveSettings({ style: { ...settings.style, [select.name]: select.value } }),
@@ -189,7 +238,7 @@ const switchModel = async (to: string) => {
   const load = $("model-load");
   load.hidden = false;
   load.dataset.state = "loading";
-  load.textContent = `Loading ${modelName}…`;
+  localize(load, "modelLoading", { model: modelName });
   switching = true;
   select.disabled = true;
   const download = $<HTMLButtonElement>("gemini-download");
@@ -201,7 +250,9 @@ const switchModel = async (to: string) => {
         ...geminiOptions,
         monitor: (monitor) =>
           monitor.addEventListener("downloadprogress", (event) => {
-            load.textContent = `Downloading Gemini Nano… ${Math.round(event.loaded * 100)}%`;
+            localize(load, "geminiDownloadProgress", {
+              percent: Math.round(event.loaded * 100),
+            });
           }),
       });
       try {
@@ -222,19 +273,27 @@ const switchModel = async (to: string) => {
     await saveSettings({ model: to });
     settings = { ...settings, model: to };
     if (to === GEMINI_MODEL && from !== GEMINI_MODEL) {
-      await send({ type: "ollama.switch", data: { from, to: null } }).catch(console.warn);
+      await send({ type: "ollama.switch", data: { from, to: null } }).catch(
+        console.warn,
+      );
     }
     if (to === GEMINI_MODEL && from === to) {
       await send({ type: "gemini.ready" });
     }
     load.dataset.state = "ready";
-    load.textContent = `${modelName} is loaded. Checks use it from now on.`;
+    localize(load, "modelLoaded", { model: modelName });
   } catch (error) {
     if (error instanceof Error && error.message === GEMINI_TEST_BACKEND_ERROR) {
       gemini = "unavailable";
     }
     load.dataset.state = "error";
-    load.textContent = `Couldn't load ${modelName}: ${error instanceof Error ? error.message : String(error)}`;
+    unlocalize(load);
+    load.replaceChildren(
+      localize(document.createElement("span"), "modelFailed", {
+        model: modelName,
+      }),
+      ` ${error instanceof Error ? error.message : String(error)}`,
+    );
   } finally {
     switching = false;
     renderModel();

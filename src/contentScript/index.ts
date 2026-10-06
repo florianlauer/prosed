@@ -10,7 +10,9 @@ import {
   Settings,
   defaultSettings,
 } from "../settings";
-import { formalityLevels, Tone, tones } from "../prompts";
+import { type Tone } from "../prompts";
+import { getLocale, setLocale, toneMessages, formalityMessages, t, type MessageKey, type Values } from "../i18n/index.ts";
+import { localize, localizeNote, message, translateOverlay, unlocalize } from "../i18n/dom.ts";
 import { formality, rewrite, tonesFor, type Generate, type Rewrite } from "../check";
 import { send, type Message } from "../messages";
 import { CheckSession } from "../session";
@@ -305,10 +307,11 @@ const recursivelyFindAllTextAreas = (node: Node) => {
 };
 
 type PanelContent = {
-  title: string;
-  body: string | DocumentFragment;
+  title: MessageKey | "";
+  values?: Values;
+  body: string | Node;
   muted?: boolean;
-  action?: { label: string; onClick: () => void };
+  action?: { label: MessageKey; onClick: () => void };
 };
 
 // The panel listing every suggestion, opened from the trigger.
@@ -325,7 +328,7 @@ class Tooltip {
     this.#tooltip = document.createElement("div");
     this.#tooltip.className = "aig-root aig-pop aig-panel";
     this.#tooltip.role = "dialog";
-    this.#tooltip.ariaLabel = "Grammar suggestions";
+    localize(this.#tooltip, "grammarSuggestions", {}, "aria-label");
 
     const head = document.createElement("div");
     head.className = "aig-panel__head";
@@ -346,14 +349,14 @@ class Tooltip {
     const settingsLink = document.createElement("button");
     settingsLink.type = "button";
     settingsLink.className = "aig-link";
-    settingsLink.textContent = "Settings";
+    localize(settingsLink, "settings", {}, "textContent");
     settingsLink.addEventListener("click", () =>
       send({ type: "options.open" }),
     );
     const siteOff = document.createElement("button");
     siteOff.type = "button";
     siteOff.className = "aig-link";
-    siteOff.textContent = `Turn off on ${hostname}`;
+    localize(siteOff, "turnOffSite", { site: hostname });
     siteOff.addEventListener("click", () => void disableSite(hostname));
     foot.append(settingsLink, siteOff);
 
@@ -374,12 +377,20 @@ class Tooltip {
     delete this.#tooltip.dataset.open;
   }
 
-  set content({ title, body, muted, action }: PanelContent) {
-    this.#title.textContent = title;
+  set content({ title, values = {}, body, muted, action }: PanelContent) {
+    if (title) localize(this.#title, title, values);
+    else {
+      unlocalize(this.#title);
+      this.#title.textContent = "";
+    }
     this.#body.replaceChildren(...(body ? [body] : []));
     this.#tooltip.toggleAttribute("data-muted", !!muted);
     this.#action.hidden = !action;
-    this.#action.textContent = action?.label ?? "";
+    if (action) localize(this.#action, action.label);
+    else {
+      unlocalize(this.#action);
+      this.#action.textContent = "";
+    }
     this.#onAction = action?.onClick ?? null;
     this.#updateTooltipPosition();
   }
@@ -658,7 +669,7 @@ class SuggestionCard {
     this.#card = document.createElement("div");
     this.#card.className = "aig-root aig-pop aig-card";
     this.#card.role = "dialog";
-    this.#card.ariaLabel = "Suggestion";
+    localize(this.#card, "suggestion", {}, "aria-label");
     document.body.appendChild(this.#card);
   }
 
@@ -675,7 +686,7 @@ class SuggestionCard {
     this.onActiveChange(hunk);
 
     // whitespace-only changes would otherwise render as an empty label
-    const quoted = (s: string) => `“${s.trim() || "space"}”`;
+    const quoted = (s: string) => `“${s.trim() || t("space")}”`;
     const apply = document.createElement("button");
     apply.type = "button";
     apply.className = "aig-card__apply";
@@ -692,17 +703,17 @@ class SuggestionCard {
       children.push(was);
       apply.textContent = hunk.replacement;
     } else if (removed) {
-      apply.textContent = `Remove ${quoted(removed)}`;
+      localize(apply, "removeText", { text: quoted(removed) });
     } else {
-      apply.textContent = `Add ${quoted(hunk.replacement)}`;
+      localize(apply, "addText", { text: quoted(hunk.replacement) });
     }
     children.push(apply);
 
-    const secondary = (label: string, onClick: () => void) => {
+    const secondary = (key: MessageKey, onClick: () => void, values: Values = {}) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "aig-card__secondary";
-      button.textContent = label;
+      localize(button, key, values);
       button.addEventListener("click", () => {
         this.hide();
         onClick();
@@ -711,9 +722,9 @@ class SuggestionCard {
     };
     const word = dictionaryCandidate(removed);
     if (word) {
-      children.push(secondary(`Add ${quoted(word)} to dictionary`, () => this.onAddWord(word)));
+      children.push(secondary("addWord", () => this.onAddWord(word), { word: quoted(word) }));
     }
-    children.push(secondary("Ignore", () => this.onIgnore(hunk)));
+    children.push(secondary("ignore", () => this.onIgnore(hunk)));
     this.#card.replaceChildren(...children);
     this.#card.dataset.open = "";
 
@@ -786,7 +797,7 @@ class RewriteCard {
     this.#card = document.createElement("div");
     this.#card.className = "aig-root aig-pop aig-card aig-card--rewrite";
     this.#card.role = "dialog";
-    this.#card.ariaLabel = "Rewrite";
+    localize(this.#card, "rewrite", {}, "aria-label");
     document.body.appendChild(this.#card);
   }
 
@@ -811,9 +822,9 @@ class RewriteCard {
     button.type = "button";
     button.className = "aig-card__rewrite";
     button.innerHTML = rewriteIcon;
-    button.append("Rewrite this sentence");
+    button.append(message("rewriteSentence"));
     button.addEventListener("click", () => this.open(target, anchor));
-    this.#show(target, anchor, [this.#label(`Long sentence, ${wordCount(target.text)} words`), button]);
+    this.#show(target, anchor, [this.#label("longSentence", false, { count: wordCount(target.text) }), button]);
   }
 
   async open(target: RewriteTarget, anchor: () => DOMRect, tone: Tone = "clearer") {
@@ -829,13 +840,13 @@ class RewriteCard {
       const chips = document.createElement("div");
       chips.className = "aig-chips";
       chips.role = "group";
-      chips.ariaLabel = "Tone";
+      localize(chips, "tone", {}, "aria-label");
       this.#chips = tonesFor(target.text).map((t) => {
         const chip = document.createElement("button");
         chip.type = "button";
         chip.className = "aig-chip";
         chip.dataset.tone = t;
-        chip.textContent = tones[t].label;
+        localize(chip, toneMessages[t]);
         chip.addEventListener("click", () => this.open(target, anchor, t));
         return chip;
       });
@@ -849,7 +860,7 @@ class RewriteCard {
     }
 
     const run = ++this.#run;
-    this.#setBody([this.#label("Rewriting…", true)]);
+    this.#setBody([this.#label("rewriting", true)]);
 
     const rewriting = this.rewrite(target, tone);
     // sent after the rewrite, so an Ollama that runs one request at a time answers the rewrite first
@@ -862,7 +873,7 @@ class RewriteCard {
     } catch (e) {
       console.warn(e);
       if (run === this.#run) {
-        this.#setBody([this.#note("The rewrite failed. Check that the model is running.")]);
+        this.#setBody([this.#note("rewriteFailed")]);
       }
       return;
     }
@@ -872,17 +883,21 @@ class RewriteCard {
     const { variants, notes } = result;
     // false friends are worth reading even when no variant made it
     const noteList = notes.length
-      ? [this.#label("Words to check"), ...notes.map((n) => this.#note(n))]
+      ? [this.#label("wordsToCheck"), ...notes.map((n) => {
+          const note = document.createElement("p");
+          note.className = "aig-card__note";
+          return localizeNote(note, n);
+        })]
       : [];
     if (variants.length === 0) {
       this.#setBody([
-        this.#note("No rewrite kept every name, number and link, so none is shown. Try a shorter selection."),
+        this.#note("noRewrites"),
         ...noteList,
       ]);
       return;
     }
     this.#setBody([
-      this.#label(tone === "clearer" ? "Rewrites" : tones[tone].label),
+      this.#label(tone === "clearer" ? "rewrites" : toneMessages[tone]),
       ...variants.map((variant) => {
         const button = document.createElement("button");
         button.type = "button";
@@ -919,9 +934,9 @@ class RewriteCard {
       dots.append(dot);
     }
     const name = document.createElement("strong");
-    name.textContent = formalityLevels[level - 1];
-    meter.replaceChildren("Sounds", dots, name);
-    meter.title = `Formality ${level} of 5, from very casual to very formal`;
+    localize(name, formalityMessages[level - 1]);
+    meter.replaceChildren(message("sounds"), dots, name);
+    localize(meter, "formalityMeter", { level }, "title");
     meter.hidden = false;
     this.reposition();
   }
@@ -931,18 +946,18 @@ class RewriteCard {
     this.reposition();
   }
 
-  #label(text: string, busy = false) {
+  #label(key: MessageKey, busy = false, values: Values = {}) {
     const label = document.createElement("div");
     label.className = "aig-card__label";
     label.toggleAttribute("data-busy", busy);
-    label.textContent = text;
+    localize(label, key, values);
     return label;
   }
 
-  #note(text: string) {
+  #note(key: MessageKey) {
     const note = document.createElement("p");
     note.className = "aig-card__note";
-    note.textContent = text;
+    localize(note, key);
     return note;
   }
 
@@ -1016,7 +1031,7 @@ type State =
   | { type: "loading" }
   | { type: "correct" }
   | { type: "wrong"; text: DocumentFragment; count: number }
-  | { type: "error"; text: string };
+  | { type: "error"; text: Node };
 
 class Control {
   #button: HTMLButtonElement;
@@ -1069,7 +1084,7 @@ class Control {
     this.#rewriteButton.type = "button";
     this.#rewriteButton.className = "aig-root aig-rewrite-button";
     this.#rewriteButton.innerHTML = rewriteIcon;
-    this.#rewriteButton.append("Rewrite");
+    this.#rewriteButton.append(message("rewrite"));
     this.#rewriteButton.addEventListener("click", () => {
       const selection = this.#selection;
       delete this.#rewriteButton.dataset.open;
@@ -1091,7 +1106,7 @@ class Control {
     this.#button.type = "button";
     this.#button.className = "aig-root aig-trigger";
     this.#button.style.zIndex = "2147483647";
-    this.#setGlyph(spinnerIcon, "Checking grammar");
+    this.#setGlyph(spinnerIcon, "checkingGrammar");
     document.body.appendChild(this.#button);
     this.#tooltip = new Tooltip(this.#button);
 
@@ -1106,6 +1121,7 @@ class Control {
       this.#rewriteButton,
     ]) {
       el.dataset.theme = theme;
+      el.lang = getLocale();
     }
 
     this.updatePosition();
@@ -1308,29 +1324,29 @@ class Control {
     if (!this.#provider) {
       return fixes ?? "";
     }
-    const label = (text: string, kind: string) => {
+    const label = (key: MessageKey, kind: string) => {
       const el = document.createElement("div");
       el.className = "aig-section";
       el.dataset.kind = kind;
-      el.textContent = text;
+      localize(el, key);
       return el;
     };
     const body = document.createDocumentFragment();
     if (fixes) {
       const text = document.createElement("div");
       text.append(fixes);
-      body.append(label("Fixes", "fix"), text);
+      body.append(label("fixes", "fix"), text);
     }
     if (this.#longRanges.length) {
-      body.append(label("Rewrites", "rewrite"));
+      body.append(label("rewrites", "rewrite"));
     }
     this.#longRanges.forEach(({ start, end }, i) => {
       const text = this.#text.slice(start, end);
       const item = document.createElement("button");
       item.type = "button";
       item.className = "aig-rewrite-item";
-      item.textContent = `${text.split(/\s+/).slice(0, 6).join(" ")}… (${wordCount(text)} words)`;
-      item.title = "Rewrite this sentence";
+      localize(item, "sentencePreview", { text: text.split(/\s+/).slice(0, 6).join(" "), count: wordCount(text) });
+      localize(item, "rewriteSentence", {}, "title");
       item.addEventListener("click", () => {
         this.#tooltip.hide();
         this.#rewriteCard.open({ start, end, text }, () => this.#long.bounds(i));
@@ -1344,19 +1360,19 @@ class Control {
     const chips = document.createElement("div");
     chips.className = "aig-chips";
     chips.role = "group";
-    chips.ariaLabel = "Tone of the whole text";
+    localize(chips, "wholeTextTone", {}, "aria-label");
     for (const tone of tonesFor(core)) {
       const chip = document.createElement("button");
       chip.type = "button";
       chip.className = "aig-chip";
-      chip.textContent = tones[tone].label;
+      localize(chip, toneMessages[tone]);
       chip.addEventListener("click", () => {
         this.#tooltip.hide();
         this.#rewriteCard.open(whole, () => this.textArea.getBoundingClientRect(), tone);
       });
       chips.append(chip);
     }
-    body.append(label("Whole text", "rewrite"), chips);
+    body.append(label("wholeText", "rewrite"), chips);
     return body;
   }
 
@@ -1382,37 +1398,39 @@ class Control {
         return;
       case "loading":
         this.#show();
-        this.#setGlyph(spinnerIcon, "Checking grammar");
-        this.#tooltip.content = { title: "Checking…", body: "" };
+        this.#setGlyph(spinnerIcon, "checkingGrammar");
+        this.#tooltip.content = { title: "checkingProgress", body: "" };
         return;
       case "correct":
         this.#show();
-        this.#setGlyph(checkIcon, "No suggestions");
-        this.#tooltip.content = { title: "No fixes", body: this.#panelBody(null) };
+        this.#setGlyph(checkIcon, "noSuggestions");
+        this.#tooltip.content = { title: "noFixes", body: this.#panelBody(null) };
         return;
       case "wrong": {
-        const title = `${state.count} ${state.count === 1 ? "suggestion" : "suggestions"}`;
+        const title = "suggestions";
         this.#show();
         this.#setGlyph(
           `<span class="aig-count">${state.count}</span>`,
-          `${title}, click to accept all`,
+          "acceptAllHint",
+          { count: state.count },
         );
         this.#tooltip.content = {
           title,
+          values: { count: state.count },
           body: this.#panelBody(state.text),
-          action: { label: "Accept all", onClick: this.#handleWrongClick },
+          action: { label: "acceptAll", onClick: this.#handleWrongClick },
         };
         this.#button.addEventListener("click", this.#handleWrongClick);
         return;
       }
       case "error":
         this.#show();
-        this.#setGlyph(powerIcon, "Grammar check unavailable");
+        this.#setGlyph(powerIcon, "checkUnavailable");
         this.#tooltip.content = {
-          title: "Grammar check unavailable",
+          title: "checkUnavailable",
           body: state.text,
           muted: true,
-          action: { label: "Open docs", onClick: this.#handleErrorClick },
+          action: { label: "openDocs", onClick: this.#handleErrorClick },
         };
         this.#button.addEventListener("click", this.#handleErrorClick);
         return;
@@ -1420,8 +1438,8 @@ class Control {
   }
 
   // skipped when unchanged, so the glyph's entrance doesn't replay on every keystroke
-  #setGlyph(html: string, label: string) {
-    this.#button.ariaLabel = label;
+  #setGlyph(html: string, key: MessageKey, values: Values = {}) {
+    localize(this.#button, key, values, "aria-label");
     if (this.#glyph === html) {
       return;
     }
@@ -1479,15 +1497,17 @@ class Control {
 
   #errorText(error: any) {
     if (!this.#provider) {
-      return "AI is not supported. Please enable it in your browser settings.";
+      return message("aiUnsupported");
     }
     console.warn(error);
     // the extension was reloaded or updated after this tab loaded; this script is orphaned
     if (!chrome.runtime?.id) {
-      return "The extension was updated. Reload this page to check your text again.";
+      return message("extensionUpdated");
     }
-    const message = error?.message ?? error?.toString();
-    return "Something went wrong. Please try again." + (message ? ` (${message})` : "");
+    const errorMessage = error?.message ?? error?.toString();
+    const body = document.createElement("span");
+    body.append(localize(document.createElement("span"), "somethingWrong"), errorMessage ? ` (${errorMessage})` : "");
+    return body;
   }
 
   // Drops suggestions on words just added to the dictionary or on changes just ignored,
@@ -1692,6 +1712,8 @@ const updateTargets = (provider: () => Provider | null) => {
 
 const main = async () => {
   settings = await loadSettings();
+  setLocale(settings.uiLocale);
+  window.addEventListener("languagechange", () => { setLocale(settings.uiLocale); translateOverlay(); });
   let provider: Provider | null = null;
   let selection = 0;
   const currentProvider = () => provider;
@@ -1737,6 +1759,8 @@ const main = async () => {
       JSON.stringify([next.dictionary, next.ignored]) !==
       JSON.stringify([settings.dictionary, settings.ignored]);
     settings = next;
+    setLocale(settings.uiLocale);
+    translateOverlay();
     if (modelChanged) void selectProvider();
     if (siteDisabled()) {
       control?.destroy();

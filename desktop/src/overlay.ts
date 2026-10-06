@@ -10,6 +10,8 @@ import { changeOf, markedSpan, splitCheckable, type Hunk } from "../../src/conte
 import { addToDictionary, ignoreChange, loadSettings, onSettingsChange } from "../../src/settings.ts";
 import { CheckSession } from "../../src/session.ts";
 import { followTheme, generate, type App, type Rect } from "./api.ts";
+import { getLocale, setLocale } from "../../src/i18n/index.ts";
+import { localize, translateOverlay } from "../../src/i18n/dom.ts";
 
 type Tick = {
   app: App | null;
@@ -27,6 +29,13 @@ const badge = document.getElementById("badge") as HTMLButtonElement;
 followTheme();
 
 let settings = await loadSettings();
+setLocale(settings.uiLocale);
+document.documentElement.lang = getLocale();
+window.addEventListener("languagechange", () => {
+  setLocale(settings.uiLocale);
+  document.documentElement.lang = getLocale();
+  translateOverlay();
+});
 
 // the focused field's text, null when there's none
 let text: string | null = null;
@@ -63,6 +72,10 @@ const union = (rects: Rect[]): Rect => {
 const setBadge = (state: "hidden" | "loading" | "wrong" | "correct" | "error", html = "") => {
   badge.hidden = state === "hidden";
   badge.dataset.state = state;
+  localize(badge, state === "loading" ? "checkingGrammar"
+    : state === "error" ? "checkUnavailable"
+    : state === "wrong" ? "acceptAllHint" : "noSuggestions",
+    { count: session.hunks.length }, "aria-label");
   // skipped when unchanged, so the glyph's entrance doesn't replay on every keystroke
   if (html !== glyph) {
     glyph = html;
@@ -388,6 +401,9 @@ listen<FixAction>(
 // Drops fixes on words just added to the dictionary or changes just ignored, without a new check.
 onSettingsChange((next) => {
   settings = next;
+  setLocale(settings.uiLocale);
+  document.documentElement.lang = getLocale();
+  translateOverlay();
   if (text !== null) {
     session.refresh();
   }

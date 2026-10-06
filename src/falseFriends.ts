@@ -3,84 +3,87 @@
 // and returned pairs like "actually" → "actually". Only French for now.
 // ponytail: one language; add a list per language when someone needs it.
 
+import { en } from "./i18n/catalogs.ts";
+import { formatMessage } from "./i18n/index.ts";
+
 type FalseFriend = { pattern: RegExp; note: (word: string) => string };
 
 const french: FalseFriend[] = [
   {
     pattern: /\bactually\b/i,
-    note: () => `"actually" means "in fact". For "actuellement", write "currently".`,
+    note: () => en.noteActually,
   },
   {
     pattern: /\beventually\b/i,
-    note: () => `"eventually" means "in the end". For "éventuellement", write "possibly" or "if needed".`,
+    note: () => en.noteEventually,
   },
   {
     pattern: /\bassist(?:s|ed|ing)? (?:to|at)\b/i,
-    note: () => `"assist" means "help". For "assister à", write "attend".`,
+    note: () => en.noteAssist,
   },
   {
     pattern: /\bprecise (?:the|me|it|your|my|our|this|that|if|whether|when)\b/i,
-    note: () => `"precise" is an adjective. For "préciser", write "specify" or "clarify".`,
+    note: () => en.notePrecise,
   },
   {
     // on its own, not "the planning phase"
     pattern:
       /\b(?:the|a|my|your|his|her|their|our|this) planning\b(?!\s+(?:phase|stage|process|meeting|session|team|tools?|permission|application|committee|department|period|board|cycle)\b)/i,
-    note: () => `"planning" is the activity. For "le planning", write "the schedule".`,
+    note: () => en.notePlanning,
   },
   {
     pattern: /\bsympat?h?ic\b/i,
-    note: () => `"sympathic" isn't English. For "sympathique", write "nice" or "friendly".`,
+    note: () => en.noteSympathic,
   },
   {
     pattern: /\bdiscuss(?:ed|es|ing)? about\b/i,
-    note: () => `"discuss" takes no "about": write "discuss it" or "talk about it".`,
+    note: () => en.noteDiscuss,
   },
   {
     // not "since 2 weeks ago", which is right
     pattern:
       /\bsince (?:\d+|an?|one|two|three|four|five|six|seven|eight|nine|ten|a few|several) (?:minutes?|hours?|days?|weeks?|months?|years?)\b(?!\s+ago)/i,
-    note: () => `For a length of time, English uses "for": "for 2 weeks", not "since 2 weeks".`,
+    note: () => en.noteSince,
   },
   {
     pattern: /\b(?:a|the|this|my|our) formation\b/i,
-    note: () => `"formation" means a shape or a group. For "une formation", write "a training course".`,
+    note: () => en.noteFormation,
   },
   {
     pattern: /\bdeceptions?\b/i,
-    note: () => `"deception" means lying. For "déception", write "disappointment".`,
+    note: () => en.noteDeception,
   },
   {
     pattern: /\bprevent(?:s|ed|ing)? (?:you|him|her|them|me|us)\b(?!\s+from)/i,
-    note: () => `"prevent" means "stop". For "prévenir quelqu'un", write "let you know" or "warn you".`,
+    note: () => en.notePrevent,
   },
   {
     pattern: /\bdemand(?:s|ed|ing)? (?:you|him|her|them|if|whether)\b/i,
-    note: () => `"demand" sounds like an order. For "demander", write "ask".`,
+    note: () => en.noteDemand,
   },
   {
     pattern: /\b(?:the|an) occasion to\b/i,
-    note: () => `For "l'occasion de", write "the chance to" or "the opportunity to".`,
+    note: () => en.noteOccasion,
   },
   {
     pattern: /\b(?:my|your|his|her|their|our) coordinates\b/i,
-    note: () => `"coordinates" are for maps. For "coordonnées", write "contact details".`,
+    note: () => en.noteCoordinates,
   },
   {
     pattern: /\b(?:informations|advices|feedbacks)\b/gi,
-    note: (word) => `"${word}" has no plural in English: write "${word.slice(0, -1)}".`,
+    note: (word) => formatMessage(en.notePlural, { word, singular: word.slice(0, -1) }),
   },
   {
     pattern: /\bsensible\b/i,
-    note: () => `"sensible" means "reasonable". For "sensible" in French, write "sensitive".`,
+    note: () => en.noteSensible,
   },
   {
     pattern: /\bpass(?:ed|ing)? (?:an?|the|my|your) (?:exam|test)\b/i,
-    note: () => `"pass an exam" means succeeding. For "passer un examen", write "take an exam".`,
+    note: () => en.noteExam,
   },
   {
     pattern: /\bI(?:['’]m| am) agree\b/i,
-    note: () => `"agree" is a verb: write "I agree", not "I am agree".`,
+    note: () => en.noteAgree,
   },
 ];
 
