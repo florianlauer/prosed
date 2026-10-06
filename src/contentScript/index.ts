@@ -33,6 +33,19 @@ const hostname = siteHostname({
   referrer: document.referrer,
 });
 
+// Keeps focus and selection in the input while clicking our popups. Capture on window runs
+// before the page's own document-level capture listeners, so modals that skip prevented
+// mousedowns (GitHub's Primer overlays) don't take a click on a suggestion as a click outside.
+window.addEventListener(
+  "mousedown",
+  (e) => {
+    if (e.target instanceof Element && e.target.closest(".aig-root")) {
+      e.preventDefault();
+    }
+  },
+  true,
+);
+
 // Kept current by main(); read at event time so changes in the options page apply at once.
 let settings: Settings = defaultSettings;
 
@@ -646,8 +659,6 @@ class SuggestionCard {
     this.#card.className = "aig-root aig-pop aig-card";
     this.#card.role = "dialog";
     this.#card.ariaLabel = "Suggestion";
-    // keep focus and selection in the input while clicking the suggestion
-    this.#card.addEventListener("mousedown", (e) => e.preventDefault());
     document.body.appendChild(this.#card);
   }
 
@@ -776,8 +787,6 @@ class RewriteCard {
     this.#card.className = "aig-root aig-pop aig-card aig-card--rewrite";
     this.#card.role = "dialog";
     this.#card.ariaLabel = "Rewrite";
-    // keep focus and selection in the input while clicking a variant
-    this.#card.addEventListener("mousedown", (e) => e.preventDefault());
     document.body.appendChild(this.#card);
   }
 
@@ -1061,8 +1070,6 @@ class Control {
     this.#rewriteButton.className = "aig-root aig-rewrite-button";
     this.#rewriteButton.innerHTML = rewriteIcon;
     this.#rewriteButton.append("Rewrite");
-    // keep the selection: it is what gets replaced
-    this.#rewriteButton.addEventListener("mousedown", (e) => e.preventDefault());
     this.#rewriteButton.addEventListener("click", () => {
       const selection = this.#selection;
       delete this.#rewriteButton.dataset.open;
@@ -1111,8 +1118,6 @@ class Control {
     const tooltip = this.#tooltip.element;
     tooltip.addEventListener("mouseenter", () => this.#showTooltip());
     tooltip.addEventListener("mouseleave", () => this.#hideTooltip());
-    // keep focus and selection in the input while clicking suggestions
-    tooltip.addEventListener("mousedown", (e) => e.preventDefault());
 
     this.#updateInterval = setInterval(() => {
       control?.updatePosition();
