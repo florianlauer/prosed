@@ -284,11 +284,11 @@ impl EditableField for Field {
     }
 
     fn focused(&self) -> bool {
-        let system = unsafe { CFType::wrap_under_create_rule(AXUIElementCreateSystemWide() as CFTypeRef) };
-        let element = system.as_CFTypeRef() as AXUIElementRef;
-        unsafe { AXUIElementSetMessagingTimeout(element, 0.3) };
-        copy_attribute(element, kAXFocusedUIElementAttribute)
-            .is_some_and(|focused| unsafe { CFEqual(focused.as_CFTypeRef(), self.0 as CFTypeRef) != 0 })
+        // System-wide focus reads can fail while the frontmost app exposes its focused field.
+        let mut platform = Platform::new();
+        platform.frontmost()
+            .and_then(|(_, pid)| platform.focused(pid))
+            .is_some_and(|focused| platform.same(self, &focused))
     }
 
     fn select(&self, start: usize, end: usize) -> bool {
