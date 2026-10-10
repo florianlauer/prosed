@@ -47,6 +47,18 @@ fn type_unicode(text: &str) -> bool {
 
 // Cmd+letter on macOS, Ctrl+letter elsewhere.
 fn command(letter: char) -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        // HIToolbox keyboard layout lookup aborts when called outside the main queue.
+        dispatch2::run_on_main(|_| send_command(letter))
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        send_command(letter)
+    }
+}
+
+fn send_command(letter: char) -> bool {
     let Some(mut enigo) = enigo() else { return false };
     let pressed = enigo.key(COMMAND, Direction::Press).is_ok() && enigo.key(Key::Unicode(letter), Direction::Click).is_ok();
     let _ = enigo.key(COMMAND, Direction::Release);

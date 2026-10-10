@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Desktop 0.2.1 [2026.10.10]
+
+- fix: run macOS clipboard keyboard commands on the main thread to prevent crashes when applying corrections or replacing a selection
+
 ## 0.12.0 / Desktop 0.2.0 [2026.10.10]
 
 - feat: bring your own API key in the extension and desktop app for OpenAI, Anthropic, OpenRouter, Gemini API, Mistral, Groq, DeepSeek or an OpenAI-compatible endpoint. Settings can test the connection, save a model per provider and remove a key
