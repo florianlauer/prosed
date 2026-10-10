@@ -3160,13 +3160,14 @@ dependencies = [
 
 [[package]]
 name = "prosed"
-version = "0.1.0"
+version = "0.2.1"
 dependencies = [
  "accessibility-sys",
  "arboard",
  "core-foundation 0.10.1",
  "core-foundation-sys",
  "core-graphics",
+ "dispatch2",
  "enigo",
  "keyring",
  "objc2",
