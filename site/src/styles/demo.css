@@ -1,0 +1,319 @@
+/* The demo mirrors the product's overlay (src/contentScript/overlay.css) with the site's tokens. */
+
+.demo {
+  position: relative;
+  min-width: 0;
+}
+
+.demo-field {
+  position: relative;
+  display: grid;
+  padding: var(--space-5) var(--space-5) var(--space-7);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-md);
+  background: var(--color-tile);
+  font: 400 var(--text-base) / 1.6 var(--font-sans);
+}
+
+.demo-text,
+.demo-ghost {
+  grid-area: 1 / 1;
+  overflow-wrap: anywhere;
+}
+
+.demo-ghost {
+  visibility: hidden;
+}
+
+/* A zero-width point in the line, so popups anchor to one line even on a wrapped selection. */
+.demo-anchor {
+  position: relative;
+}
+
+/* The product draws a 2px bar under the word, not a browser underline. */
+.demo-mistake {
+  background-image: linear-gradient(var(--color-mistake), var(--color-mistake));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 2px;
+  padding-bottom: 1px;
+}
+
+.demo-selection {
+  border-radius: 3px;
+  background: var(--color-rewrite-wash-strong);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.demo-caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 1.15em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background: var(--color-ink);
+  animation: demo-blink 1.1s steps(1) infinite;
+}
+
+@keyframes demo-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Popovers: one surface, as in the product. --shift keeps them inside the field's width; like the
+ * real ones they may hang below the field, into the space the hero leaves under it. */
+.demo-pop {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: max-content;
+  max-width: min(20rem, calc(100vw - 4 * var(--space-5)));
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  color: var(--color-ink);
+  box-shadow:
+    var(--shadow-pop),
+    0 0 0 1px var(--color-rule);
+  font: 400 var(--text-sm) / 1.45 var(--font-sans);
+  white-space: normal;
+  translate: var(--shift, 0) 0;
+  animation: demo-pop-in var(--dur-fast) var(--ease-out);
+}
+
+@keyframes demo-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+.demo-card {
+  top: calc(100% + var(--space-2));
+  left: 0;
+}
+
+.demo-rewrites {
+  max-width: min(22rem, calc(100vw - 4 * var(--space-5)));
+}
+
+.demo-was {
+  padding: 0 var(--space-1);
+  color: var(--color-ink-soft);
+  text-decoration: line-through;
+}
+
+.demo-apply,
+.demo-variant,
+.demo-accept {
+  position: relative;
+}
+
+/* The rewrite button is itself a popover, so it keeps .demo-pop's absolute position. */
+.demo-apply,
+.demo-variant,
+.demo-accept,
+.demo-rewrite-button {
+  border-radius: 6px;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.demo-apply {
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-fix-wash);
+  color: var(--color-fix-ink);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.demo-heading {
+  padding: 0 var(--space-1);
+  color: var(--color-ink-soft);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.demo-variant {
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-rewrite-wash);
+  overflow-wrap: anywhere;
+}
+
+.demo-variant[data-picked="true"] {
+  background: var(--color-rewrite-wash-strong);
+}
+
+[data-press="true"]:is(.demo-apply, .demo-variant, .demo-accept, .demo-rewrite-button) {
+  transform: scale(0.98);
+}
+
+.demo-apply[data-press="true"] {
+  background: var(--color-fix-wash-strong);
+}
+
+/* Badge: the counter in the field's corner. */
+.demo-badge {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  background: var(--color-mistake-ink);
+  color: var(--color-on-accent);
+}
+
+.demo-count {
+  font: 600 12px/1 var(--font-sans);
+}
+
+.demo-panel {
+  right: 0;
+  bottom: calc(100% + var(--space-2));
+  min-width: 14rem;
+  padding: 0;
+  gap: 0;
+}
+
+.demo-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.demo-panel-head .demo-heading {
+  padding: 0;
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+}
+
+.demo-accept {
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-fix-wash);
+  color: var(--color-fix-ink);
+  font-weight: 600;
+}
+
+.demo-accept[data-press="true"] {
+  background: var(--color-fix-wash-strong);
+}
+
+.demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+}
+
+.demo-del {
+  color: var(--color-mistake-ink);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.demo-ins {
+  padding: 0 var(--space-1);
+  border-radius: 3px;
+  background: var(--color-fix-wash);
+  color: var(--color-fix-ink);
+}
+
+.demo-rewrite-button {
+  top: calc(100% + var(--space-1));
+  left: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  background: var(--color-rewrite-ink);
+  color: var(--color-on-accent);
+  font-weight: 600;
+}
+
+.demo-rewrite-button svg {
+  fill: currentColor;
+}
+
+.demo-pointer {
+  position: absolute;
+  right: 14%;
+  bottom: -12px;
+  z-index: 2;
+  fill: var(--color-ink);
+  stroke: var(--color-paper);
+  stroke-width: 1.2;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.demo-pointer[data-press="true"] {
+  transform: scale(0.88);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-caret,
+  .demo-pop {
+    animation: none;
+  }
+
+  .demo-pointer,
+  .demo-apply,
+  .demo-variant,
+  .demo-accept,
+  .demo-rewrite-button {
+    transition: none;
+  }
+}
+
+/* Reduced motion, through data-motion (the script also covers it before hydration). */
+:root[data-motion="paused"] {
+  .demo-caret,
+  .demo-pop {
+    animation: none;
+  }
+}
+
+/* Wider screens give the rewrite card room for short variants, so it hangs less far. */
+@media (min-width: 40rem) {
+  .demo-rewrites {
+    max-width: 34rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .demo-rewrites {
+    max-width: 46rem;
+  }
+}
+
+/* Phones: smaller type and two-line variants keep the hanging card short. */
+@media (max-width: 40rem) {
+  .demo-field {
+    padding: var(--space-4) var(--space-4) var(--space-7);
+    font-size: 0.9375rem;
+  }
+
+  .demo-pop {
+    font-size: 0.8125rem;
+  }
+
+  .demo-variant {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+}

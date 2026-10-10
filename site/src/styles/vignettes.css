@@ -1,0 +1,362 @@
+/* Feature vignettes: one behaviour each, looped in CSS on the demo's own parts.
+ * Reduced motion holds each one on its most telling frame. */
+
+.vignette {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 9rem;
+  padding: var(--space-5);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-lg);
+  background: var(--color-tile);
+  color: var(--color-ink);
+  font: 400 var(--text-base) / 1.6 var(--font-sans);
+}
+
+.block .vignette p {
+  color: var(--color-ink);
+}
+
+/* Fix: underline, card, click, the word swaps, then back to the start. */
+.vf-word {
+  position: relative;
+  display: inline-grid;
+}
+
+.vf-from,
+.vf-to {
+  grid-area: 1 / 1;
+}
+
+.vf-from {
+  animation: vf-from 6s var(--ease-out) infinite;
+}
+
+.vf-to {
+  border-radius: 3px;
+  background: var(--color-fix-wash);
+  color: var(--color-fix-ink);
+  opacity: 0;
+  animation: vf-to 6s var(--ease-out) infinite;
+}
+
+.vignette .vf-card {
+  top: calc(100% + var(--space-2));
+  left: calc(-1 * var(--space-2));
+  flex-direction: row;
+  align-items: center;
+  opacity: 0;
+  animation: vf-card 6s var(--ease-out) infinite;
+}
+
+.vf-apply {
+  animation: vf-press 6s var(--ease-out) infinite;
+}
+
+@keyframes vf-from {
+  0%,
+  58% {
+    opacity: 1;
+  }
+  62%,
+  94% {
+    opacity: 0;
+  }
+}
+
+@keyframes vf-to {
+  0%,
+  58% {
+    opacity: 0;
+  }
+  62%,
+  94% {
+    opacity: 1;
+  }
+}
+
+@keyframes vf-card {
+  0%,
+  6% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  12%,
+  56% {
+    opacity: 1;
+    transform: none;
+  }
+  60%,
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+@keyframes vf-press {
+  0%,
+  46% {
+    transform: none;
+    background: var(--color-fix-wash);
+  }
+  52% {
+    transform: scale(0.95);
+    background: var(--color-fix-wash-strong);
+  }
+  56%,
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes vf-undo {
+  0%,
+  62% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  68%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.vf-undo {
+  position: absolute;
+  top: calc(100% + var(--space-3));
+  left: 0;
+  display: flex;
+  gap: var(--space-1);
+  opacity: 0;
+  animation: vf-undo 6s var(--ease-out) infinite;
+}
+
+.vf-undo kbd {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  box-shadow:
+    inset 0 0 0 1px var(--color-rule),
+    0 1px 0 var(--color-rule);
+  color: var(--color-ink-soft);
+  font: 400 0.75rem / 1.7 var(--font-mono);
+}
+
+/* The vignette's line sits high so the card and the undo hint have room under it. */
+.vignette > p:only-child {
+  padding-block-end: var(--space-8);
+}
+
+/* Rewrite: the sentence is selected, three versions come in, one is picked. */
+.vr-sel {
+  border-radius: 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  animation: vr-sel 7s var(--ease-out) infinite;
+}
+
+.vr-variants {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.vr-variants li {
+  padding: var(--space-1) var(--space-3);
+  border-radius: 6px;
+  background: var(--color-rewrite-wash);
+  opacity: 0;
+  animation: vr-variant 7s var(--ease-out) infinite;
+  animation-delay: calc(var(--i) * 180ms);
+}
+
+.vr-variants li:nth-child(2) {
+  animation-name: vr-picked;
+}
+
+@keyframes vr-sel {
+  0%,
+  6% {
+    background: transparent;
+  }
+  12%,
+  90% {
+    background: var(--color-rewrite-wash-strong);
+  }
+  96%,
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes vr-variant {
+  0%,
+  18% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  24%,
+  88% {
+    opacity: 1;
+    transform: none;
+  }
+  94%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes vr-picked {
+  0%,
+  18% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  24%,
+  56% {
+    opacity: 1;
+    transform: none;
+  }
+  62%,
+  88% {
+    opacity: 1;
+    background: var(--color-rewrite-wash-strong);
+    box-shadow: inset 0 0 0 1px var(--color-rewrite);
+  }
+  94%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Memory: a word joins the dictionary, an ignored fix is struck for good. */
+.vm-label {
+  color: var(--color-ink-soft);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.block .vignette .vm-label {
+  color: var(--color-ink-soft);
+}
+
+.vm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.vm-chips li {
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--color-rule);
+  font: 400 var(--text-sm) / 1.9 var(--font-mono);
+}
+
+.vm-chips .vm-new {
+  background: var(--color-fix-wash);
+  box-shadow: inset 0 0 0 1px var(--color-fix);
+  color: var(--color-fix-ink);
+  animation: vm-new 6s var(--ease-out) infinite;
+}
+
+.vm-ignored {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  justify-self: start;
+  width: fit-content;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--color-rule);
+  font-size: var(--text-sm);
+  /* the strike that marks the fix as refused */
+  background: linear-gradient(var(--color-ink-soft), var(--color-ink-soft)) 0 50% / 100% 1.5px
+    no-repeat;
+  animation: vm-ignore 6s var(--ease-out) infinite;
+}
+
+@keyframes vm-new {
+  0%,
+  12% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  20%,
+  90% {
+    opacity: 1;
+    transform: none;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes vm-ignore {
+  0%,
+  44% {
+    background-size: 0 1.5px;
+    opacity: 1;
+  }
+  54%,
+  90% {
+    background-size: 100% 1.5px;
+    opacity: 0.55;
+  }
+  96%,
+  100% {
+    background-size: 0 1.5px;
+    opacity: 1;
+  }
+}
+
+/* No script (so no data-motion) but reduced motion: stop on the opening frame. */
+@media (prefers-reduced-motion: reduce) {
+  .vignette * {
+    animation: none;
+  }
+}
+
+/* Fix holds on the open card, rewrite on the picked version, memory on the end state. */
+:root[data-motion="paused"] .vignette {
+  * {
+    animation: none;
+  }
+
+  .vf-card {
+    opacity: 1;
+  }
+
+  .vr-sel {
+    background: var(--color-rewrite-wash-strong);
+  }
+
+  .vr-variants li {
+    opacity: 1;
+  }
+
+  .vr-variants li:nth-child(2) {
+    background: var(--color-rewrite-wash-strong);
+    box-shadow: inset 0 0 0 1px var(--color-rewrite);
+  }
+
+  .vm-ignored {
+    background-size: 100% 1.5px;
+    opacity: 0.55;
+  }
+}

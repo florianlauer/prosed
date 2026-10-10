@@ -17,6 +17,8 @@
     pkgs.lld
     # the Windows installer
     pkgs.nsis
+    # the showcase site (site/) uses pnpm
+    pkgs.pnpm
   ] ++ lib.optionals pkgs.stdenv.isLinux [
     pkgs.pkg-config
     pkgs.gtk3

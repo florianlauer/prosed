@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://prosed.flauercase.dev/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://prosed.flauercase.dev/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://prosed.flauercase.dev/fr"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://prosed.flauercase.dev/de"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://prosed.flauercase.dev/es"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://prosed.flauercase.dev/it"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://prosed.flauercase.dev/"/>
+  </url>
+  <url>
+    <loc>https://prosed.flauercase.dev/fr</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://prosed.flauercase.dev/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://prosed.flauercase.dev/fr"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://prosed.flauercase.dev/de"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://prosed.flauercase.dev/es"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://prosed.flauercase.dev/it"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://prosed.flauercase.dev/"/>
+  </url>
+  <url>
+    <loc>https://prosed.flauercase.dev/de</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://prosed.flauercase.dev/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://prosed.flauercase.dev/fr"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://prosed.flauercase.dev/de"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://prosed.flauercase.dev/es"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://prosed.flauercase.dev/it"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://prosed.flauercase.dev/"/>
+  </url>
+  <url>
+    <loc>https://prosed.flauercase.dev/es</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://prosed.flauercase.dev/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://prosed.flauercase.dev/fr"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://prosed.flauercase.dev/de"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://prosed.flauercase.dev/es"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://prosed.flauercase.dev/it"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://prosed.flauercase.dev/"/>
+  </url>
+  <url>
+    <loc>https://prosed.flauercase.dev/it</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://prosed.flauercase.dev/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://prosed.flauercase.dev/fr"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://prosed.flauercase.dev/de"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://prosed.flauercase.dev/es"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://prosed.flauercase.dev/it"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://prosed.flauercase.dev/"/>
+  </url>
+</urlset>

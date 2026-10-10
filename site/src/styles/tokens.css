@@ -1,0 +1,74 @@
+/* Hallmark · macrostructure: proof-grid (bento) · nav: N1a · footer: Ft4 · tone: editorial · anchor hue: none (ink on paper) */
+:root {
+  --color-paper: #ece7dc;
+  --color-ink: #15181d;
+  --color-ink-soft: color-mix(in oklch, var(--color-ink) 68%, var(--color-paper));
+  --color-rule: color-mix(in oklch, var(--color-ink) 18%, var(--color-paper));
+  --color-mistake: oklch(66% 0.19 29);
+  --color-fix: oklch(72% 0.15 152);
+  --color-rewrite: oklch(70% 0.15 290);
+  --color-focus: var(--color-ink);
+  /* text and wash variants, taken from the product's overlay so the demo matches it */
+  --color-mistake-ink: oklch(50% 0.19 29);
+  --color-fix-ink: oklch(46% 0.13 152);
+  --color-fix-wash: oklch(72% 0.15 152 / 0.18);
+  --color-fix-wash-strong: oklch(72% 0.15 152 / 0.32);
+  --color-rewrite-ink: oklch(48% 0.19 290);
+  --color-rewrite-wash: oklch(62% 0.17 290 / 0.12);
+  --color-rewrite-wash-strong: oklch(62% 0.17 290 / 0.24);
+  --color-card: oklch(98.5% 0.006 85);
+  /* panels and vignettes sit on a slightly lifted paper */
+  --color-tile: color-mix(in oklch, var(--color-card) 45%, var(--color-paper));
+  --color-on-accent: oklch(99% 0.006 85);
+  --shadow-pop:
+    0 10px 28px -8px oklch(20% 0.02 265 / 0.28), 0 2px 6px -2px oklch(20% 0.02 265 / 0.12);
+
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+
+  --text-sm: 0.875rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  --text-display: clamp(2.5rem, 1.4rem + 5vw, 5.5rem);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+  --space-9: 7rem;
+
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+
+  --measure: 62ch;
+  --page-width: 78rem;
+  --page-gutter: clamp(var(--space-5), 4vw, var(--space-7));
+}
+
+/* Dark is the default; the header toggle sets data-theme="light". */
+:root:not([data-theme="light"]) {
+  --color-paper: #15181d;
+  --color-ink: #ece7dc;
+  --color-mistake-ink: oklch(78% 0.14 29);
+  --color-fix-ink: oklch(82% 0.14 152);
+  --color-fix-wash: oklch(72% 0.15 152 / 0.2);
+  --color-fix-wash-strong: oklch(72% 0.15 152 / 0.34);
+  --color-rewrite-ink: oklch(82% 0.11 290);
+  --color-rewrite-wash: oklch(66% 0.15 290 / 0.2);
+  --color-rewrite-wash-strong: oklch(66% 0.15 290 / 0.34);
+  --color-card: oklch(25% 0.012 265);
+  --shadow-pop: 0 12px 32px -8px oklch(8% 0.01 265 / 0.6), 0 2px 6px -2px oklch(8% 0.01 265 / 0.4);
+  /* the dark accents are light, so text on them turns dark */
+  --color-on-accent: var(--color-paper);
+}

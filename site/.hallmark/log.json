@@ -1,0 +1,22 @@
+[
+  {
+    "date": "2026-10-10",
+    "surface": "site/src/components/Page.tsx",
+    "macrostructure": "long-document",
+    "nav": "N1a",
+    "footer": "Ft4",
+    "theme": "locked (site/DESIGN.md: ink on paper)",
+    "genre": "editorial",
+    "note": "Hero is a diptych (title | demo) because the spec gives the demo half the hero; everything below is one column at the measure."
+  },
+  {
+    "date": "2026-10-10",
+    "surface": "site/src/components/Page.tsx",
+    "macrostructure": "proof-grid (bento)",
+    "nav": "N1a",
+    "footer": "Ft4",
+    "theme": "locked (site/DESIGN.md: ink on paper, dark by default)",
+    "genre": "editorial",
+    "note": "Redesign after review: centred hero with OS-aware download, compact demo, logo row, feature vignettes, ruled panels for hosts and models, benchmark as command output, closing CTA."
+  }
+]
