@@ -7,7 +7,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { checkIcon, powerIcon, spinnerIcon } from "../../src/contentScript/render.ts";
 import { changeOf, markedSpan, splitCheckable, type Hunk } from "../../src/contentScript/text.ts";
-import { addToDictionary, ignoreChange, loadSettings, onSettingsChange } from "../../src/settings.ts";
+import { addToDictionary, backendChanged, ignoreChange, loadSettings, onSettingsChange } from "../../src/settings.ts";
 import { CheckSession } from "../../src/session.ts";
 import { followTheme, generate, type App, type Rect } from "./api.ts";
 import { getLocale, setLocale } from "../../src/i18n/index.ts";
@@ -398,13 +398,15 @@ listen<FixAction>(
   },
 );
 
-// Drops fixes on words just added to the dictionary or changes just ignored, without a new check.
+// A provider change invalidates an in-flight answer; dictionary changes keep existing fixes.
 onSettingsChange((next) => {
+  const modelChanged = backendChanged(settings, next);
   settings = next;
   setLocale(settings.uiLocale);
   document.documentElement.lang = getLocale();
   translateOverlay();
   if (text !== null) {
-    session.refresh();
+    if (modelChanged) session.edit(text);
+    else session.refresh();
   }
 });

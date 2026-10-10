@@ -3,6 +3,7 @@ import { computePosition, flip, offset, Rect, shift } from "@floating-ui/dom";
 import "./overlay.css";
 import {
   addToDictionary,
+  backendChanged,
   disableSite,
   loadSettings,
   ignoreChange,
@@ -17,6 +18,7 @@ import { formality, rewrite, tonesFor, type Generate, type Rewrite } from "../ch
 import { send, type Message } from "../messages";
 import { CheckSession } from "../session";
 import { GEMINI_MODEL } from "../gemini";
+import { isCloudProvider } from "../cloud";
 import {
   changeOf,
   dictionaryCandidate,
@@ -173,6 +175,18 @@ const replaceText = (
 
 // A model backend, reached through the service worker, which keeps an abort controller per channel.
 type Provider = { name: string; isSupported: () => Promise<boolean>; generate: Generate };
+
+const cloud: Provider = {
+  name: "personal API key",
+  isSupported: async () => true,
+  async generate({ channel, prompt, schema }) {
+    const response = await send({ type: "cloud.generate", channel, prompt, schema });
+    if (response === null) throw new DOMException("The check was cancelled.", "AbortError");
+    if (!response) throw new Error("The API request failed. Open settings to check the connection.");
+    if ("error" in response) throw new Error(response.error);
+    return response.value;
+  },
+};
 
 const gemini: Provider = {
   name: "chrome built-in",
@@ -1726,7 +1740,11 @@ const main = async () => {
     resetControl();
     provider = null;
     const model = settings.model;
-    const candidates = model === GEMINI_MODEL ? [gemini] : [ollama, gemini];
+    const candidates = isCloudProvider(settings.provider)
+      ? [cloud]
+      : model === GEMINI_MODEL
+        ? [gemini]
+        : [ollama, gemini];
     let selected: Provider | null = null;
     for (const candidate of candidates) {
       if (await candidate.isSupported()) {
@@ -1754,7 +1772,7 @@ const main = async () => {
     }
   });
   onSettingsChange((next) => {
-    const modelChanged = next.model !== settings.model;
+    const modelChanged = backendChanged(settings, next);
     const filtersChanged =
       JSON.stringify([next.dictionary, next.ignored]) !==
       JSON.stringify([settings.dictionary, settings.ignored]);

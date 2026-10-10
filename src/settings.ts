@@ -1,6 +1,7 @@
 // User settings, in chrome.storage.sync so they follow the browser account without a server.
 // ponytail: sync storage caps an item at 8 KB, a few hundred dictionary words or ignored
 // changes; move those lists to storage.local if people outgrow that.
+import type { CloudConfig, CloudProvider } from "./cloud.ts";
 import { isUiLocale, type UiLocale } from "./i18n/index.ts";
 
 // A change as whole words, e.g. "review" → "révision".
@@ -15,6 +16,9 @@ export type Style = {
 };
 
 export type Settings = {
+  provider: "local" | CloudProvider;
+  // Credentials live separately in local storage or the desktop OS keychain.
+  cloudConfigs: Partial<Record<CloudProvider, CloudConfig>>;
   uiLocale: UiLocale;
   // Picked with bench/grammar-bench.mjs: best accuracy on French typos under 5 GB.
   model: string;
@@ -28,6 +32,8 @@ export type Settings = {
 };
 
 export const defaultSettings: Settings = {
+  provider: "local",
+  cloudConfigs: {},
   uiLocale: "system",
   model: "gemma4:e2b-it-qat",
   dictionary: [],
@@ -37,7 +43,9 @@ export const defaultSettings: Settings = {
 };
 
 export const loadSettings = async (): Promise<Settings> => {
-  const stored = (await chrome.storage.sync.get(defaultSettings)) as Partial<Settings>;
+  const stored = (await chrome.storage.sync.get(
+    defaultSettings,
+  )) as Partial<Settings>;
   // merged so a style option added later gets its default
   return {
     ...defaultSettings,
@@ -49,6 +57,11 @@ export const loadSettings = async (): Promise<Settings> => {
 
 export const saveSettings = (changes: Partial<Settings>) =>
   chrome.storage.sync.set(changes);
+
+export const backendChanged = (previous: Settings, next: Settings) =>
+  previous.model !== next.model ||
+  previous.provider !== next.provider ||
+  JSON.stringify(previous.cloudConfigs) !== JSON.stringify(next.cloudConfigs);
 
 export const onSettingsChange = (listener: (settings: Settings) => void) => {
   const handle = (_: unknown, area: string) => {
@@ -63,7 +76,9 @@ export const onSettingsChange = (listener: (settings: Settings) => void) => {
 export const addToDictionary = async (word: string) => {
   const { dictionary } = await loadSettings();
   if (!dictionary.includes(word)) {
-    await saveSettings({ dictionary: [...dictionary, word].sort((a, b) => a.localeCompare(b)) });
+    await saveSettings({
+      dictionary: [...dictionary, word].sort((a, b) => a.localeCompare(b)),
+    });
   }
 };
 
@@ -74,7 +89,8 @@ export const disableSite = async (hostname: string) => {
   }
 };
 
-export const sameChange = (a: Change, b: Change) => a.from === b.from && a.to === b.to;
+export const sameChange = (a: Change, b: Change) =>
+  a.from === b.from && a.to === b.to;
 
 export const ignoreChange = async (change: Change) => {
   const { ignored } = await loadSettings();

@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+- feat: bring your own API key in the extension and desktop app for OpenAI, Anthropic, OpenRouter, Gemini API, Mistral, Groq, DeepSeek or an OpenAI-compatible endpoint. Settings can test the connection, save a model per provider and remove a key
+- privacy: API mode sends checks and rewrites directly to the chosen provider and uses that account's credits. Local mode remains the default. Keys stay in local extension storage or the desktop system keychain and never sync
+
 ## 0.11.0 [2026.10.03]
 
 - feat: the project is now called prosed, with its own icon, colors and type. The settings page uses IBM Plex, bundled with the extension

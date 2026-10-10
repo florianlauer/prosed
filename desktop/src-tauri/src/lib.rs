@@ -1,4 +1,5 @@
 mod config;
+mod cloud;
 mod keys;
 mod ollama;
 pub mod platform;
@@ -628,6 +629,7 @@ pub fn run() {
     let builder = builder.plugin(tauri_nspanel::init());
     builder
         .manage(ollama::Requests::default())
+        .manage(cloud::Requests::default())
         .invoke_handler(tauri::generate_handler![
             get_config,
             save_config,
@@ -648,6 +650,10 @@ pub fn run() {
             set_ui_labels,
             ollama::ollama_generate,
             ollama::ollama_models,
+            cloud::cloud_send,
+            cloud::cloud_key_status,
+            cloud::cloud_key_save,
+            cloud::cloud_key_remove,
         ])
         .setup(|app| {
             // a menu bar app: no Dock icon, no app switcher entry
