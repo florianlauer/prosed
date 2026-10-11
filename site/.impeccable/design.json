@@ -245,8 +245,8 @@
       },
       {
         "name": "motion-pause",
-        "value": ":root[data-motion=\"paused\"]",
-        "purpose": "Set only by the head script when prefers-reduced-motion: reduce matches; never stored. Stops the demo loop, caret, popover entry and vignettes."
+        "value": "@media (prefers-reduced-motion: reduce)",
+        "purpose": "Matched in CSS and read live by the demo script; never stored. Stops the demo loop, caret, popover entry, demo transitions and vignettes."
       }
     ],
     "breakpoints": [
@@ -385,7 +385,7 @@
     "dos": [
       "Do default to dark and let the visitor choose light; keep both themes in one swapped palette.",
       "Do put a working miniature next to each claim, built from the demo's own parts.",
-      "Do let every loop autoplay with a still frame that shows its point, and stop motion only for `prefers-reduced-motion`, through `data-motion=\"paused\"`.",
+      "Do let every loop autoplay with a still frame that shows its point, and stop motion only for `prefers-reduced-motion`, through the media query in CSS and a live `matchMedia` in the demo script.",
       "Do keep tiles to lifted paper, a 1px hairline and 14px corners.",
       "Do stack section headings above full-width content and align repeated tiles with subgrid.",
       "Do keep pieces of text whole and let their rows wrap."

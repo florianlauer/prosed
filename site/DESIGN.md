@@ -256,7 +256,7 @@ Ink slabs, quiet and certain.
 
 ### Theme toggle
 
-One round 36px button in the header, sun or moon, with `aria-pressed`. Hairline ring, lifted-paper hover, scale to 0.94 on press. It sets `data-theme="light"` on the root and keeps the choice in `localStorage` under `theme`; an inline head script applies it before first paint. The same script sets `data-motion="paused"` when `prefers-reduced-motion: reduce` matches. Motion has no control and nothing about it is stored.
+One round 36px button in the header, sun or moon, with `aria-pressed`. Hairline ring, lifted-paper hover, scale to 0.94 on press. It sets `data-theme="light"` on the root and keeps the choice in `localStorage` under `theme`; an inline head script applies it before first paint. Motion has no control and nothing about it is stored.
 
 ### Chips and logo marks
 
@@ -272,11 +272,11 @@ Languages as soft-ink sans links at 0.875rem with a transparent underline; hover
 
 ### Demo (signature)
 
-A replica of the extension's overlay in site tokens: a lifted-paper field with the mistake bar under a word, a blinking caret, and popovers on the card surface that hang below the field into the reserved space. The script loop pauses off screen, in a hidden tab, under the pointer and under reduced motion; servers, no-JS visitors and reduced-motion visitors get the still frame. Screen readers get a text equivalent.
+A replica of the extension's overlay in site tokens: a lifted-paper field with the mistake bar under a word, a blinking caret, and popovers on the card surface that hang below the field into the reserved space. The script loop pauses off screen, in a hidden tab, under the pointer and under reduced motion, read live so turning it on mid-visit returns to the still frame and turning it off resumes; servers, no-JS visitors and reduced-motion visitors get the still frame. Screen readers get a text equivalent.
 
 ### Feature vignettes (signature)
 
-Three CSS-only loops on the demo's own parts, in lifted-paper tiles: fix (underline, card, press, swap, undo keys), rewrite (selection, three variants, one picked), memory (dictionary chips, an ignored fix struck through). Loops run 6 to 7s on `--ease-out`. Under reduced motion, fix holds on the open card, rewrite on the picked variant, memory on the end state. With reduced motion and no script they stop on the opening frame.
+Three CSS-only loops on the demo's own parts, in lifted-paper tiles: fix (underline, card, press, swap, undo keys), rewrite (selection, three variants, one picked), memory (dictionary chips, an ignored fix struck through). Loops run 6 to 7s on `--ease-out`. Under reduced motion, with or without script, fix holds on the open card, rewrite on the picked variant, memory on the end state.
 
 ### Benchmark results
 
@@ -288,7 +288,7 @@ A one-sentence intro ("Graded on the default local model, on an M2 Pro.") and a 
 
 - **Do** default to dark and let the visitor choose light; keep both themes in one swapped palette.
 - **Do** put a working miniature next to each claim, built from the demo's own parts.
-- **Do** let every loop autoplay with a still frame that shows its point, and stop motion only for `prefers-reduced-motion`, through `data-motion="paused"`.
+- **Do** let every loop autoplay with a still frame that shows its point, and stop motion only for `prefers-reduced-motion`, through the media query in CSS and a live `matchMedia` in the demo script.
 - **Do** keep tiles to lifted paper, a 1px hairline and 14px corners.
 - **Do** stack section headings above full-width content and align repeated tiles with subgrid.
 - **Do** keep pieces of text whole and let their rows wrap.

@@ -18,8 +18,8 @@ export function Demo({ demo }: { demo: Content["demo"] }) {
 
   useEffect(() => {
     if (!root.current) return;
-    // Reduced motion sets data-motion="paused" on <html> (see THEME_SCRIPT).
-    const paused = () => document.documentElement.dataset.motion === "paused";
+    // Read live, so turning reduced motion on or off mid-visit stops or resumes the loop.
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     // Start from the still frame the server rendered, so hydration doesn't blank the field.
     let next = still;
     let visible = false;
@@ -31,7 +31,7 @@ export function Demo({ demo }: { demo: Content["demo"] }) {
       timer = undefined;
     };
     const run = () => {
-      if (timer !== undefined || !visible || hovered || document.hidden || paused()) return;
+      if (timer !== undefined || !visible || hovered || document.hidden || reduced.matches) return;
       setIndex(next);
       timer = window.setTimeout(() => {
         timer = undefined;
@@ -45,6 +45,13 @@ export function Demo({ demo }: { demo: Content["demo"] }) {
       else stop();
     });
     const onVisibility = () => (document.hidden ? stop() : run());
+    const onMotion = () => {
+      if (!reduced.matches) return run();
+      // Back to the still frame, the one reduced motion shows on load.
+      stop();
+      next = still;
+      setIndex(still);
+    };
     const onEnter = () => {
       hovered = true;
       stop();
@@ -56,12 +63,14 @@ export function Demo({ demo }: { demo: Content["demo"] }) {
     const figure = root.current;
     observer.observe(figure);
     document.addEventListener("visibilitychange", onVisibility);
+    reduced.addEventListener("change", onMotion);
     figure.addEventListener("pointerenter", onEnter);
     figure.addEventListener("pointerleave", onLeave);
     return () => {
       stop();
       observer.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
+      reduced.removeEventListener("change", onMotion);
       figure.removeEventListener("pointerenter", onEnter);
       figure.removeEventListener("pointerleave", onLeave);
     };

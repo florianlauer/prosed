@@ -325,38 +325,34 @@
   }
 }
 
-/* No script (so no data-motion) but reduced motion: stop on the opening frame. */
+/* Reduced motion: fix holds on the open card, rewrite on the picked version, memory on the end state. */
 @media (prefers-reduced-motion: reduce) {
-  .vignette * {
-    animation: none;
-  }
-}
+  .vignette {
+    /* !important: the animated rules (.vr-variants li, .vignette .vf-card) outrank `.vignette *`. */
+    * {
+      animation: none !important;
+    }
 
-/* Fix holds on the open card, rewrite on the picked version, memory on the end state. */
-:root[data-motion="paused"] .vignette {
-  * {
-    animation: none;
-  }
+    .vf-card {
+      opacity: 1;
+    }
 
-  .vf-card {
-    opacity: 1;
-  }
+    .vr-sel {
+      background: var(--color-rewrite-wash-strong);
+    }
 
-  .vr-sel {
-    background: var(--color-rewrite-wash-strong);
-  }
+    .vr-variants li {
+      opacity: 1;
+    }
 
-  .vr-variants li {
-    opacity: 1;
-  }
+    .vr-variants li:nth-child(2) {
+      background: var(--color-rewrite-wash-strong);
+      box-shadow: inset 0 0 0 1px var(--color-rewrite);
+    }
 
-  .vr-variants li:nth-child(2) {
-    background: var(--color-rewrite-wash-strong);
-    box-shadow: inset 0 0 0 1px var(--color-rewrite);
-  }
-
-  .vm-ignored {
-    background-size: 100% 1.5px;
-    opacity: 0.55;
+    .vm-ignored {
+      background-size: 100% 1.5px;
+      opacity: 0.55;
+    }
   }
 }

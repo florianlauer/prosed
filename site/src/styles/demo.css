@@ -277,14 +277,6 @@
   }
 }
 
-/* Reduced motion, through data-motion (the script also covers it before hydration). */
-:root[data-motion="paused"] {
-  .demo-caret,
-  .demo-pop {
-    animation: none;
-  }
-}
-
 /* Wider screens give the rewrite card room for short variants, so it hangs less far. */
 @media (min-width: 40rem) {
   .demo-rewrites {

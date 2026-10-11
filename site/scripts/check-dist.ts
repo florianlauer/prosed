@@ -1,6 +1,6 @@
 // Checks the prerendered output before Vercel ships it.
 import { existsSync, readFileSync } from "node:fs";
-import { LOCALES, localePath } from "../src/i18n/locales.ts";
+import { LOCALES, SITE_URL, localePath } from "../src/i18n/locales.ts";
 
 const out = new URL("../dist/client/", import.meta.url);
 const errors: string[] = [];
@@ -24,6 +24,25 @@ for (const locale of LOCALES) {
 }
 for (const path of ["404.html", "og.png", "sitemap.xml", "robots.txt"]) {
   if (!existsSync(new URL(path, out))) errors.push(`missing ${path}`);
+}
+// public/sitemap.xml is written by hand: every page must be listed, with all its alternates.
+if (existsSync(new URL("sitemap.xml", out))) {
+  const sitemap = readFileSync(new URL("sitemap.xml", out), "utf8");
+  const url = (locale: (typeof LOCALES)[number]) => `${SITE_URL}${localePath(locale)}`;
+  const pages = sitemap.match(/<url>[\s\S]*?<\/url>/g) ?? [];
+  if (pages.length !== LOCALES.length)
+    errors.push(`sitemap.xml: ${pages.length} pages, expected ${LOCALES.length}`);
+  for (const locale of LOCALES) {
+    const page = pages.find((block) => block.includes(`<loc>${url(locale)}</loc>`));
+    if (!page) {
+      errors.push(`sitemap.xml: no <loc> for ${locale}`);
+      continue;
+    }
+    for (const other of LOCALES) {
+      if (!page.includes(`hreflang="${other}" href="${url(other)}"`))
+        errors.push(`sitemap.xml: the ${locale} page has no ${other} alternate`);
+    }
+  }
 }
 if (existsSync(new URL("en/index.html", out)))
   errors.push("en/index.html exists; English lives at /");
