@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex" />
+    <title>prosed · 404</title>
+    <link rel="icon" href="/brand/prosed.svg" type="image/svg+xml" />
+    <style>
+      /* ponytail: copies tokens.css values, since the bundled CSS has a hashed name; keep in sync with src/styles/tokens.css */
+      @font-face {
+        font-family: "IBM Plex Mono";
+        src: url("/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+        font-display: swap;
+      }
+      :root {
+        /* dark, the site's default theme; this page has no script to read a saved choice */
+        --color-paper: #15181d;
+        --color-ink: #ece7dc;
+        --color-rewrite: oklch(70% 0.15 290);
+        --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+        color-scheme: dark;
+      }
+      html,
+      body {
+        overflow-x: clip;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-content: center;
+        gap: 2rem;
+        padding: 2rem;
+        background: var(--color-paper);
+        color: var(--color-ink);
+        font: 400 1rem / 1.5 var(--font-mono);
+      }
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.75rem;
+      }
+      a {
+        color: inherit;
+        white-space: nowrap;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.22em;
+      }
+      a:hover {
+        text-decoration-thickness: 2px;
+      }
+      a:focus-visible {
+        outline: 2px solid var(--color-ink);
+        outline-offset: 3px;
+      }
+      ::selection {
+        background: color-mix(in oklch, var(--color-rewrite) 30%, transparent);
+      }
+    </style>
+  </head>
+  <body>
+    <img src="/brand/prosed.svg" alt="" width="48" height="48" />
+    <ul>
+      <li lang="en">Page not found. <a href="/">Back to prosed.</a></li>
+      <li lang="fr">Page introuvable. <a href="/fr">Retour à prosed.</a></li>
+      <li lang="de">Seite nicht gefunden. <a href="/de">Zurück zu prosed.</a></li>
+      <li lang="es">Página no encontrada. <a href="/es">Volver a prosed.</a></li>
+      <li lang="it">Pagina non trovata. <a href="/it">Torna a prosed.</a></li>
+    </ul>
+  </body>
+</html>

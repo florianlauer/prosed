@@ -1,0 +1,566 @@
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V4 */
+
+/* Proof grid: a centred hero, the demo under it, then each claim next to its proof. */
+
+.site-header,
+main,
+.site-footer {
+  width: min(100%, var(--page-width));
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+
+/* Links in the header, hero and footer never break across two lines. */
+.site-header a,
+.ctas a,
+.other-downloads a,
+.footer-links a {
+  white-space: nowrap;
+}
+
+a:active {
+  color: var(--color-ink-soft);
+}
+
+.icon {
+  flex: none;
+  fill: currentColor;
+}
+
+/* Small links get a 24px-plus hit area (WCAG 2.5.8). */
+.languages a,
+.github,
+.footer-links a {
+  display: inline-block;
+  padding-block: var(--space-1);
+}
+
+/* Header: wordmark, languages, theme and GitHub. */
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-6);
+  padding-block: var(--space-5);
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: 700 var(--text-lg) / 1 var(--font-mono);
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-inline-start: auto;
+}
+
+.github {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.github:hover {
+  text-decoration: underline;
+}
+
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--color-rule);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-ink);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.theme-toggle:hover {
+  background: var(--color-tile);
+}
+
+.theme-toggle:active {
+  transform: scale(0.94);
+}
+
+/* Narrow screens: wordmark and actions on one row, the languages on the next. */
+.site-header nav {
+  order: 1;
+  flex-basis: 100%;
+}
+
+@media (min-width: 48rem) {
+  .site-header nav {
+    order: 0;
+    flex-basis: auto;
+    margin-inline-start: auto;
+  }
+
+  .header-actions {
+    margin-inline-start: 0;
+  }
+}
+
+.languages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+.languages a {
+  color: var(--color-ink-soft);
+  text-decoration-color: transparent;
+}
+
+.languages a:hover {
+  color: var(--color-ink);
+  text-decoration-color: currentColor;
+}
+
+/* The current language is marked by weight and a rule, not by color alone. */
+.lang-code {
+  display: none;
+}
+
+/* The five names don't fit one row at 320px; their codes do. */
+@media (max-width: 24rem) {
+  .lang-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .lang-code {
+    display: inline;
+  }
+
+  /* The GitHub mark alone, so the actions share the wordmark's row. */
+  .github .github-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+.languages a[aria-current="page"] {
+  color: var(--color-ink);
+  font-weight: 600;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 2px;
+}
+
+/* Hero: centred, the action right under the promise. */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  padding-block: var(--space-8) var(--space-7);
+  text-align: center;
+}
+
+.hero h1 {
+  min-width: 0;
+  font: 700 var(--text-display) / 0.98 var(--font-mono);
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+.tagline {
+  max-width: 30ch;
+  color: var(--color-ink-soft);
+  font: 400 var(--text-xl) / 1.3 var(--font-mono);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-block-start: var(--space-2);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  font: 600 var(--text-base) / 1 var(--font-sans);
+  text-decoration: none;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+.button-primary {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.button-primary:hover {
+  background: color-mix(in oklch, var(--color-ink) 86%, var(--color-paper));
+}
+
+.button-primary:active {
+  color: var(--color-paper);
+}
+
+.button-ghost {
+  box-shadow: inset 0 0 0 1px var(--color-rule);
+}
+
+.button-ghost:hover {
+  background: var(--color-tile);
+  box-shadow: inset 0 0 0 1px var(--color-ink-soft);
+}
+
+.cta-detail,
+.other-downloads {
+  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+}
+
+.cta-detail {
+  margin-block-start: calc(-1 * var(--space-3));
+  font-family: var(--font-mono);
+}
+
+/* Short lines made of pieces: a piece never breaks, a dot rides with the piece after it. */
+.pieces {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.pieces > * {
+  white-space: nowrap;
+}
+
+.other-downloads {
+  column-gap: var(--space-4);
+}
+
+/* Download links are told apart by their marks; only the detail line uses a dot. */
+.cta-detail > * + *::before {
+  /* inline-block, so the link's underline skips the dot */
+  display: inline-block;
+  content: "·" / "";
+  margin-inline-end: var(--space-2);
+  color: var(--color-ink-soft);
+}
+
+.other-downloads a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-block: var(--space-1);
+  color: var(--color-ink);
+}
+
+.hero-demo {
+  position: relative;
+  z-index: 1;
+  max-width: 52rem;
+  margin-inline: auto;
+  /* room for the card that hangs below the field */
+  padding-block-end: 9.5rem;
+}
+
+@media (max-width: 40rem) {
+  .hero-demo {
+    padding-block-end: 8.5rem;
+  }
+}
+
+/* Runs on: the platforms as a row of marks under the demo. */
+.runs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding-block: var(--space-6) var(--space-8);
+}
+
+.runs-title {
+  color: var(--color-ink-soft);
+  font: 400 var(--text-sm) / 1 var(--font-mono);
+}
+
+.marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: 0;
+  list-style: none;
+  color: var(--color-ink);
+}
+
+.marks-labelled {
+  gap: var(--space-2);
+}
+
+.marks-labelled li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--color-rule);
+  font: 400 var(--text-sm) / 1.4 var(--font-mono);
+  white-space: nowrap;
+}
+
+.marks-labelled .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.runs .marks-labelled {
+  justify-content: center;
+  gap: var(--space-3) var(--space-6);
+}
+
+.runs .marks-labelled li {
+  padding: 0;
+  box-shadow: none;
+  color: var(--color-ink-soft);
+  font: 400 var(--text-base) / 1 var(--font-sans);
+}
+
+.runs .marks-labelled .icon {
+  width: 22px;
+  height: 22px;
+  color: var(--color-ink);
+}
+
+/* Blocks: the heading on top, the proof under it, full width. */
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-block-end: var(--space-8);
+}
+
+.block h2,
+.closing h2 {
+  font: 700 var(--text-xl) / 1.15 var(--font-mono);
+  letter-spacing: -0.02em;
+}
+
+.block h3,
+.host-title {
+  font: 600 var(--text-base) / 1.35 var(--font-sans);
+}
+
+.block p {
+  color: var(--color-ink-soft);
+  line-height: 1.6;
+}
+
+.block-intro {
+  max-width: var(--measure);
+}
+
+.features {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.feature .vignette {
+  margin-block-end: var(--space-3);
+}
+
+/* Wide: the three vignettes share one row height, so the headings line up. */
+@media (min-width: 52rem) {
+  .features {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 var(--space-5);
+  }
+
+  .feature {
+    display: grid;
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+    align-content: start;
+    gap: var(--space-2);
+  }
+}
+
+/* On your machine: two ruled panels, where it runs and which model. */
+.machine {
+  display: grid;
+  align-items: start;
+  gap: var(--space-5);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-5);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-lg);
+  background: var(--color-tile);
+}
+
+@media (min-width: 52rem) {
+  .machine {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+}
+
+.hosts {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  list-style: none;
+}
+
+.hosts > li {
+  display: grid;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  padding-block: var(--space-4);
+  border-block-start: 1px solid var(--color-rule);
+}
+
+/* Logos on the right of every row, once there is room. */
+@media (min-width: 40rem) {
+  .hosts > li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.hosts .host-title {
+  color: var(--color-ink);
+}
+
+.hosts .marks .icon {
+  width: 24px;
+  height: 24px;
+}
+
+.host-unsupported p {
+  font-size: var(--text-sm);
+}
+
+.host-unsupported .marks {
+  color: var(--color-ink-soft);
+}
+
+/* Benchmark: four results on one ruled line; the method is one link away. */
+.results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  padding-block: var(--space-5);
+  border-block: 1px solid var(--color-rule);
+}
+
+.results div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.results dd {
+  margin: 0;
+  font: 700 var(--text-xl) / 1.1 var(--font-mono);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.results dt {
+  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+}
+
+@media (min-width: 52rem) {
+  .results {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Closing: the promise once more, with the same button. */
+.closing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  padding-block: var(--space-6) var(--space-9);
+  text-align: center;
+}
+
+.closing h2 {
+  font-size: clamp(1.75rem, 1rem + 3vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+/* Footer: a colophon in small mono. */
+.site-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-block: var(--space-6) var(--space-7);
+  /* A rule drawn inside the gutters, so it lines up with the text. */
+  background: linear-gradient(var(--color-rule), var(--color-rule)) top center /
+    calc(100% - 2 * var(--page-gutter)) 1px no-repeat;
+  color: var(--color-ink-soft);
+  font: 400 var(--text-sm) / 1.6 var(--font-mono);
+}
+
+.site-footer a {
+  color: var(--color-ink);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-5);
+  padding: 0;
+  list-style: none;
+}
