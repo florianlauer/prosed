@@ -56,6 +56,13 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang={localeFromParam(locale) ?? "en"} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        {/* Umami, proxied through the /u rewrite in vercel.json so ad blockers see a first-party script. */}
+        <script
+          defer
+          src="/u/p.js"
+          data-website-id="330f6892-6b67-4f3b-8d53-f91290913756"
+          data-domains="prosed.flauercase.dev"
+        />
         <HeadContent />
       </head>
       <body>
