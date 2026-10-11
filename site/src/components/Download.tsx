@@ -16,7 +16,12 @@ export function useTarget(): Target {
 
 export function DownloadButton({ target, label }: { target: Target; label: string }) {
   return (
-    <a className="button button-primary" href={DOWNLOADS[target]}>
+    <a
+      className="button button-primary"
+      href={DOWNLOADS[target]}
+      data-umami-event="download"
+      data-umami-event-target={target}
+    >
       <Icon name={TARGET_ICON[target]} size={18} />
       {label}
     </a>

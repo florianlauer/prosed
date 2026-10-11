@@ -128,7 +128,12 @@ export function Page({ locale, content }: { locale: Locale; content: Content }) 
           <p className="other-downloads pieces">
             <span>{content.hero.other}</span>
             {TARGETS.filter((other) => other !== target).map((other) => (
-              <a key={other} href={DOWNLOADS[other]}>
+              <a
+                key={other}
+                href={DOWNLOADS[other]}
+                data-umami-event="download"
+                data-umami-event-target={other}
+              >
                 <Icon name={TARGET_ICON[other]} size={14} />
                 {targetName[other]}
               </a>

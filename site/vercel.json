@@ -6,5 +6,11 @@
   "outputDirectory": "dist/client",
   "cleanUrls": true,
   "trailingSlash": false,
-  "ignoreCommand": "[ -n \"$VERCEL_GIT_PREVIOUS_SHA\" ] && git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- ."
+  "ignoreCommand": "[ -n \"$VERCEL_GIT_PREVIOUS_SHA\" ] && git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- .",
+  "rewrites": [
+    {
+      "source": "/u/:path*",
+      "destination": "https://stats.flauercase.dev/:path*"
+    }
+  ]
 }
