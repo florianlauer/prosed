@@ -37,6 +37,7 @@ const LOCAL_MODELS: Mark[] = [
 const PROVIDERS: Mark[] = [
   { icon: "openai", name: "OpenAI" },
   { icon: "anthropic", name: "Anthropic" },
+  { icon: "gemini", name: "Gemini API" },
   { icon: "mistral", name: "Mistral" },
   { icon: "openrouter", name: "OpenRouter" },
   { icon: "groq", name: "Groq" },
