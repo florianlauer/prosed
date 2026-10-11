@@ -6,5 +6,18 @@
   "outputDirectory": "dist/client",
   "cleanUrls": true,
   "trailingSlash": false,
-  "ignoreCommand": "[ -n \"$VERCEL_GIT_PREVIOUS_SHA\" ] && git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- ."
+  "ignoreCommand": "[ -n \"$VERCEL_GIT_PREVIOUS_SHA\" ] && git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- .",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "prosed-site.vercel.app"
+        }
+      ],
+      "destination": "https://prosed.flauercase.dev/:path*",
+      "permanent": true
+    }
+  ]
 }
