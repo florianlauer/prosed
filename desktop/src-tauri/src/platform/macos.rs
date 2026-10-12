@@ -11,7 +11,7 @@ use core_graphics::event::CGEvent;
 use core_graphics::event_source::{CGEventSource, CGEventSourceStateID};
 use core_graphics::geometry::{CGPoint, CGRect, CGSize};
 use objc2_app_kit::{NSApplicationActivationPolicy, NSRunningApplication, NSWorkspace};
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::ffi::c_void;
 use std::ptr;
 use std::time::{Duration, Instant};
@@ -23,8 +23,8 @@ const TEXT_ROLES: [&str; 3] = ["AXTextArea", "AXTextField", "AXComboBox"];
 
 pub struct Platform {
     system: AXUIElementRef,
-    // apps already asked to build their accessibility tree
-    woken: HashSet<i32>,
+    // Last accessibility checks for each app.
+    woken: HashMap<i32, Instant>,
 }
 
 // An owned reference to the focused element of another app.
@@ -134,7 +134,7 @@ impl Platform {
         let system = unsafe { AXUIElementCreateSystemWide() };
         // an app that doesn't answer mustn't freeze the checks
         unsafe { AXUIElementSetMessagingTimeout(system, 0.3) };
-        Platform { system, woken: HashSet::new() }
+        Platform { system, woken: HashMap::new() }
     }
 
     // The app with keyboard focus. Asked through Accessibility first, since NSWorkspace only
@@ -159,9 +159,19 @@ impl Platform {
         let app = unsafe { CFType::wrap_under_create_rule(AXUIElementCreateApplication(pid) as CFTypeRef) };
         let app_ref = app.as_CFTypeRef() as AXUIElementRef;
         unsafe { AXUIElementSetMessagingTimeout(app_ref, 0.3) };
-        if self.woken.insert(pid) {
-            // Electron and Chromium only expose their text to assistive apps that ask for it
-            set_attribute(app_ref, "AXManualAccessibility", &CFBoolean::true_value().as_CFType());
+        // Electron delays activation by two seconds; frequent requests restart that timer.
+        // Older Electron versions expose only the setter, so a missing value also needs a retry.
+        let last = self.woken.get(&pid);
+        if last.is_none_or(|last| last.elapsed() >= Duration::from_secs(5)) {
+            if last.is_none()
+                || copy_attribute(app_ref, "AXManualAccessibility")
+                    .and_then(|value| value.downcast::<CFBoolean>())
+                    .is_none_or(|enabled| !bool::from(enabled))
+            {
+                // Electron and Chromium only expose their text to assistive apps that ask for it
+                set_attribute(app_ref, "AXManualAccessibility", &CFBoolean::true_value().as_CFType());
+            }
+            self.woken.insert(pid, Instant::now());
         }
         let element = copy_attribute(app_ref, kAXFocusedUIElementAttribute)?;
         if unsafe { CFGetTypeID(element.as_CFTypeRef()) != AXUIElementGetTypeID() } {

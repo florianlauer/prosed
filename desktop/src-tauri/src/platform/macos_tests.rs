@@ -282,3 +282,34 @@ fn checks_the_result_once_when_confirmation_starts_after_the_deadline() {
     assert!(!super::wait_until(expired, || { reads.set(reads.get() + 1); false }));
     assert_eq!(reads.get(), 2);
 }
+
+#[test]
+#[ignore = "requires PROSED_TEST_APP_PID, the background Electron fixture and Accessibility permission"]
+fn reenables_electron_accessibility_after_the_app_disables_it() {
+    use super::*;
+
+    assert!(trusted(false));
+    let pid = std::env::var("PROSED_TEST_APP_PID").expect("Electron app pid").parse().unwrap();
+    let app = unsafe { CFType::wrap_under_create_rule(AXUIElementCreateApplication(pid) as CFTypeRef) };
+    let app_ref = app.as_CFTypeRef() as AXUIElementRef;
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+    let features = || runtime.block_on(async {
+        reqwest::get("http://127.0.0.1:1421").await.unwrap().json::<Vec<String>>().await.unwrap()
+    });
+    let mut platform = Platform::new();
+    let mut geometry_enabled = || {
+        let _ = platform.focused(pid);
+        features().iter().any(|feature| feature == "inlineTextBoxes")
+    };
+    assert!(wait_until(Instant::now() + Duration::from_secs(4), &mut geometry_enabled));
+    println!("Before reset: {:?}", features());
+    // Existing geometry can appear before Electron's delayed enable request settles.
+    std::thread::sleep(Duration::from_secs(3));
+    assert!(set_attribute(app_ref, "AXManualAccessibility", &CFBoolean::false_value().as_CFType()));
+    assert!(wait_until(Instant::now() + Duration::from_secs(1), || !geometry_enabled()));
+    println!("After reset: {:?}", features());
+    let recovered = wait_until(Instant::now() + Duration::from_secs(9), &mut geometry_enabled);
+    println!("After recovery: {:?}", features());
+    assert!(set_attribute(app_ref, "AXManualAccessibility", &CFBoolean::true_value().as_CFType()));
+    assert!(recovered);
+}
