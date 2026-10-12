@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## Desktop 0.2.2 [2026.10.12]
+
+- fix: restore macOS text geometry after Electron disables accessibility, including versions without a readable activation flag
+- perf: limit accessibility state queries to once every five seconds per app instead of every 200 ms
+
 ## Desktop 0.2.1 [2026.10.10]
 
 - fix: run macOS clipboard keyboard commands on the main thread to prevent crashes when applying corrections or replacing a selection

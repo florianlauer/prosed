@@ -1,6 +1,6 @@
 [package]
 name = "prosed"
-version = "0.2.1"
+version = "0.2.2"
 description = "prosed, a grammar checker that runs on your machine, in every app"
 edition = "2021"
 
