@@ -23,7 +23,7 @@ const TEXT_ROLES: [&str; 3] = ["AXTextArea", "AXTextField", "AXComboBox"];
 
 pub struct Platform {
     system: AXUIElementRef,
-    // Last requests to build each app's accessibility tree.
+    // Last accessibility checks for each app.
     woken: HashMap<i32, Instant>,
 }
 
@@ -159,14 +159,18 @@ impl Platform {
         let app = unsafe { CFType::wrap_under_create_rule(AXUIElementCreateApplication(pid) as CFTypeRef) };
         let app_ref = app.as_CFTypeRef() as AXUIElementRef;
         unsafe { AXUIElementSetMessagingTimeout(app_ref, 0.3) };
-        let manual = copy_attribute(app_ref, "AXManualAccessibility").and_then(|value| value.downcast::<CFBoolean>());
         // Electron delays activation by two seconds; frequent requests restart that timer.
-        let wake = self.woken.get(&pid).is_none_or(|last| {
-            last.elapsed() >= Duration::from_secs(5) && manual.is_some_and(|enabled| !bool::from(enabled))
-        });
-        if wake {
-            // Electron and Chromium only expose their text to assistive apps that ask for it
-            set_attribute(app_ref, "AXManualAccessibility", &CFBoolean::true_value().as_CFType());
+        // Older Electron versions expose only the setter, so a missing value also needs a retry.
+        let last = self.woken.get(&pid);
+        if last.is_none_or(|last| last.elapsed() >= Duration::from_secs(5)) {
+            if last.is_none()
+                || copy_attribute(app_ref, "AXManualAccessibility")
+                    .and_then(|value| value.downcast::<CFBoolean>())
+                    .is_none_or(|enabled| !bool::from(enabled))
+            {
+                // Electron and Chromium only expose their text to assistive apps that ask for it
+                set_attribute(app_ref, "AXManualAccessibility", &CFBoolean::true_value().as_CFType());
+            }
             self.woken.insert(pid, Instant::now());
         }
         let element = copy_attribute(app_ref, kAXFocusedUIElementAttribute)?;

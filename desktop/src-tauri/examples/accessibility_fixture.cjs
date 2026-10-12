@@ -1,4 +1,5 @@
-// Run with Electron, then pass the printed pid to the ignored macOS recovery test.
+// Run with Electron and PROSED_TEST_PROFILE pointing to a temporary directory.
+// Pass the printed pid to the ignored macOS recovery test.
 const { app, BrowserWindow } = require("electron");
 const { createServer } = require("node:http");
 
