@@ -258,10 +258,28 @@ impl Field {
         None
     }
 
-    pub fn selection(&self) -> Option<(usize, usize)> {
+    fn raw_selection(&self) -> Option<(usize, usize)> {
         let value = copy_attribute(self.0, kAXSelectedTextRangeAttribute)?;
         let r = ax_value(&value, kAXValueTypeCFRange, CFRange { location: 0, length: 0 })?;
+        if r.location < 0 || r.length < 0 {
+            return None;
+        }
         Some((r.location as usize, (r.location + r.length) as usize))
+    }
+
+    fn selection_offsets(&self, text: &str) -> Option<Vec<usize>> {
+        if !text.contains('\n') || copy_attribute(self.0, "ChromeAXNodeId").is_none() {
+            return Some((0..=text.encode_utf16().count()).collect());
+        }
+        let element = unsafe { CFType::wrap_under_get_rule(self.0 as CFTypeRef) };
+        let range = parameterized(self.0, "AXTextMarkerRangeForUIElement", &element)?;
+        let selectable = parameterized(self.0, "AXStringForTextMarkerRange", &range).and_then(|value| string(&value))?;
+        selection_offsets(text, &selectable)
+    }
+
+    pub fn selection(&self) -> Option<(usize, usize)> {
+        let range = self.raw_selection()?;
+        value_range(&self.selection_offsets(&self.text()?)?, range)
     }
 
     pub fn replace(&self, start: usize, end: usize, replacement: &str) -> bool {
@@ -281,7 +299,10 @@ trait EditableField {
     fn can_set_text(&self) -> bool;
     fn select(&self, start: usize, end: usize) -> bool;
     fn set_text(&self, text: &str) -> bool;
-    fn type_text(&self, text: &str) -> bool;
+    fn type_text(&self, text: &str, wait: impl FnOnce()) -> bool;
+    fn selection_matches(&self, start: usize, end: usize, _original: &str) -> bool {
+        self.selection() == Some((start, end))
+    }
 }
 
 impl EditableField for Field {
@@ -302,7 +323,37 @@ impl EditableField for Field {
     }
 
     fn select(&self, start: usize, end: usize) -> bool {
-        set_attribute(self.0, kAXSelectedTextRangeAttribute, &range_value(start, end))
+        let Some(text) = self.text() else { return false };
+        if start == 0 && end == text.encode_utf16().count() {
+            // Chromium's AXValue includes paragraph breaks absent from AXSelectedTextRange.
+            return self.focused() && crate::keys::select_all();
+        }
+        let Some(offsets) = self.selection_offsets(&text) else { return false };
+        let Some((&from, &to)) = offsets.get(start).zip(offsets.get(end)) else { return false };
+        // A virtual paragraph break alone has no selectable characters to delete.
+        if start < end && from == to {
+            return false;
+        }
+        set_attribute(self.0, kAXSelectedTextRangeAttribute, &range_value(from, to))
+    }
+
+    fn selection_matches(&self, start: usize, end: usize, original: &str) -> bool {
+        let range = self.selection();
+        if start != 0 || end != original.encode_utf16().count() {
+            if range != Some((start, end)) {
+                return false;
+            }
+            if copy_attribute(self.0, "ChromeAXNodeId").is_none() {
+                return true;
+            }
+            let Some(selected) = copy_attribute(self.0, kAXSelectedTextAttribute).and_then(|value| string(&value)) else { return false };
+            return super::slice(original, start, end).is_some_and(|expected| selection_offsets(&expected, &selected).is_some());
+        }
+        if range == Some((start, end)) {
+            return true;
+        }
+        let Some(selected) = copy_attribute(self.0, kAXSelectedTextAttribute).and_then(|value| string(&value)) else { return false };
+        whole_selection_matches(original, &selected, self.raw_selection(), copy_attribute(self.0, "ChromeAXNodeId").is_some())
     }
 
     fn can_set_text(&self) -> bool {
@@ -313,8 +364,8 @@ impl EditableField for Field {
         set_attribute(self.0, kAXValueAttribute, &CFString::new(text).as_CFType())
     }
 
-    fn type_text(&self, text: &str) -> bool {
-        crate::keys::type_text(text)
+    fn type_text(&self, text: &str, wait: impl FnOnce()) -> bool {
+        crate::keys::type_text(text, wait)
     }
 }
 
@@ -328,6 +379,33 @@ fn wait_until(deadline: Instant, mut ready: impl FnMut() -> bool) -> bool {
         }
         std::thread::sleep(Duration::from_millis(20).min(deadline.saturating_duration_since(Instant::now())));
     }
+}
+
+fn whole_selection_matches(original: &str, selected: &str, range: Option<(usize, usize)>, chromium: bool) -> bool {
+    range == Some((0, selected.encode_utf16().count()))
+        && (selected == original || (chromium && selected.replace('\n', "") == original.replace('\n', "")))
+}
+
+// AXValue adds block separators that Chromium omits from its selectable text.
+fn selection_offsets(value: &str, selectable: &str) -> Option<Vec<usize>> {
+    let text: Vec<u16> = selectable.encode_utf16().collect();
+    let mut from = 0;
+    let mut offsets = vec![0];
+    for unit in value.encode_utf16() {
+        if text.get(from) == Some(&unit) {
+            from += 1;
+        } else if unit != b'\n' as u16 {
+            return None;
+        }
+        offsets.push(from);
+    }
+    (from == text.len()).then_some(offsets)
+}
+
+fn value_range(offsets: &[usize], (start, end): (usize, usize)) -> Option<(usize, usize)> {
+    let from = offsets.iter().rposition(|&offset| offset == start)?;
+    let to = if start == end { from } else { offsets.iter().position(|&offset| offset == end)? };
+    (from <= to).then_some((from, to))
 }
 
 fn confirm(field: &impl EditableField, next: &str, deadline: Instant) -> Replacement {
@@ -359,7 +437,7 @@ fn replace_outcome(field: &impl EditableField, start: usize, end: usize, replace
         let _ = field.set_text(&next);
         return confirm(field, &next, deadline);
     }
-    if !wait_until(deadline, || field.selection() == Some((start, end)))
+    if !wait_until(deadline, || field.selection_matches(start, end, &original))
         || field.text().as_deref() != Some(original.as_str())
         || !field.focused()
         || Instant::now() >= deadline
@@ -367,7 +445,7 @@ fn replace_outcome(field: &impl EditableField, start: usize, end: usize, replace
         return Replacement::Untouched;
     }
     // Typing preserves undo and avoids native setters that accept but ignore selected text.
-    if !field.type_text(replacement) {
+    if !field.type_text(replacement, || { wait_until(deadline, || field.text().as_deref() == Some(next.as_str())); }) {
         return Replacement::Unconfirmed;
     }
     confirm(field, &next, deadline)

@@ -162,7 +162,7 @@ impl Field {
             // only types over the right text, see `range`
             if let Some(range) = self.range(&text, start, end) {
                 if range.Select().is_ok() {
-                    return if crate::keys::type_text(replacement) { Replacement::Applied } else { Replacement::Unconfirmed };
+                    return if crate::keys::type_text(replacement, || {}) { Replacement::Applied } else { Replacement::Unconfirmed };
                 }
             }
             let Some(next) = splice(&text, start, end, replacement) else {

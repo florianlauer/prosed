@@ -1,6 +1,47 @@
 use super::{replace_outcome, splice, EditableField, Replacement};
 use std::cell::{Cell, RefCell};
 
+#[test]
+fn maps_a_word_after_four_rich_text_paragraphs_without_shifting_it() {
+    let value = "Bonjour,\nUn point avant notre échange.\nMerci de prendre le temps.\nVoici ce que je propose.\nJe prefere attendre.";
+    let text = value.replace('\n', "");
+    let offsets = super::selection_offsets(value, &text).unwrap();
+    let start = value[..value.find("prefere").unwrap()].encode_utf16().count();
+    assert_eq!((offsets[start], offsets[start + 7]), (start - 4, start + 3));
+    assert_eq!(super::value_range(&offsets, (start - 4, start + 3)), Some((start, start + 7)));
+}
+
+#[test]
+fn preserves_real_line_breaks_repeated_words_and_utf16_offsets() {
+    let value = "👍 prefere\nUne ligne\nprefere 👩‍💻";
+    let selectable = "👍 prefere\nUne ligneprefere 👩‍💻";
+    let offsets = super::selection_offsets(value, selectable).unwrap();
+    let start = value[..value.rfind("prefere").unwrap()].encode_utf16().count();
+    assert_eq!(offsets[start], start - 1);
+    assert_eq!(super::value_range(&offsets, (start - 1, start + 6)), Some((start, start + 7)));
+    assert_eq!(super::value_range(&offsets, (start - 1, start - 1)), Some((start, start)));
+    assert_eq!(super::value_range(&offsets, (999, 999)), None);
+}
+
+#[test]
+fn refuses_incompatible_accessibility_text_instead_of_guessing_offsets() {
+    assert!(super::selection_offsets("Je prefere", "Je préfère").is_none());
+    assert!(super::selection_offsets("Je prefere", "HeaderJe prefere").is_none());
+    assert!(super::selection_offsets("Je prefere", "Je prefere suffix").is_none());
+}
+
+#[test]
+fn verifies_the_entire_chromium_selection_with_virtual_paragraph_breaks() {
+    let original = "Avant 👍\nUn mot en gras\nAprès 👩‍💻";
+    let selected = original.replace('\n', "");
+    let range = Some((0, selected.encode_utf16().count()));
+    assert!(super::whole_selection_matches(original, &selected, range, true));
+    assert!(!super::whole_selection_matches(original, &selected, range, false));
+    assert!(!super::whole_selection_matches(original, "Avant 👍", Some((0, 8)), true));
+    assert!(!super::whole_selection_matches(original, &selected, Some((1, 1 + selected.encode_utf16().count())), true));
+    assert!(!super::whole_selection_matches(original, &selected, None, true));
+}
+
 fn replace_text(field: &impl EditableField, start: usize, end: usize, replacement: &str) -> bool {
     replace_outcome(field, start, end, replacement) == Replacement::Applied
 }
@@ -117,7 +158,7 @@ impl EditableField for TestField {
         self.allow_value
     }
 
-    fn type_text(&self, text: &str) -> bool {
+    fn type_text(&self, text: &str, wait: impl FnOnce()) -> bool {
         self.typed.set(self.typed.get() + 1);
         match self.edit {
             Edit::Apply => self.insert(text),
@@ -129,6 +170,7 @@ impl EditableField for TestField {
             Edit::Partial => self.text.borrow_mut().push_str(text),
             Edit::Unfocused => panic!("an unfocused field must not receive keyboard input"),
         }
+        wait();
         true
     }
 }

@@ -132,6 +132,9 @@ const render = () => {
     const count = state.hunks.length;
     setBadge(count ? "wrong" : "correct", count ? `<span class="aig-count">${count}</span>` : checkIcon);
   }
+  if (shown === PANEL) {
+    openPanel(text);
+  }
 };
 
 const session = new CheckSession({ generate, settings: () => settings, pause: 800, onChange: render });
