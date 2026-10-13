@@ -66,7 +66,7 @@ With the guest desktop at 1440 × 900 and the fixture window at its default posi
 python3 desktop/tests/replacements.tart.py
 ```
 
-The suite clicks the suggestion and Accept all through guest mouse events. It checks the exact text, undo, and clipboard contents for a long sentence, multiline Unicode, rich text, and empty, image and HTML clipboards. Screenshots go to `~/.tart/artifacts/agent-macos/replacements/`. The guest needs Node at `/opt/homebrew/bin/node` and permission for `osascript` to send input. It does not use Tart's experimental VNC server.
+The suite clicks the suggestion and Accept all through guest mouse events. It checks the exact text, undo, and clipboard contents for a long sentence, multiline Unicode, rich text, and empty, image and HTML clipboards. Individual suggestions also run after one or four paragraphs and mixed paragraph/line breaks, which previously turned `prefere attendre` into `prefpréfèreendre`. Screenshots go to `~/.tart/artifacts/agent-macos/replacements/`. The guest needs Node at `/opt/homebrew/bin/node` and permission for `osascript` to send input. It does not use Tart's experimental VNC server.
 
 The ignored Rust test `keys::tests::restores_empty_image_and_rich_text_clipboards` also runs only in the VM. Copy the test executable produced by `cargo test --lib --no-run` into the guest, then run it with `--exact keys::tests::restores_empty_image_and_rich_text_clipboards --ignored`.
 

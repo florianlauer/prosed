@@ -77,6 +77,20 @@ app.whenReady().then(async () => {
     const state = await window.webContents.executeJavaScript(
       `({text:editor.innerText,html:editor.innerHTML,selection:getSelection().toString()})`,
     );
+    const wordRect = await window.webContents.executeJavaScript(`(() => {
+      const nodes = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+      while (nodes.nextNode()) {
+        const node = nodes.currentNode;
+        const start = node.textContent.indexOf('prefere');
+        if (start < 0) continue;
+        const range = document.createRange();
+        range.setStart(node, start); range.setEnd(node, start + 7);
+        const r = range.getBoundingClientRect();
+        return { x: r.x, y: r.y, width: r.width, height: r.height };
+      }
+      return null;
+    })()`);
+    const content = window.getContentBounds();
     const clipboardItems = [];
     for (const item of await clipboard.read()) {
       const data = {};
@@ -90,6 +104,11 @@ app.whenReady().then(async () => {
     response.end(
       JSON.stringify({
         ...state,
+        wordRect: wordRect && {
+          ...wordRect,
+          x: content.x + wordRect.x,
+          y: content.y + wordRect.y,
+        },
         clipboard: await clipboard.readText(),
         clipboardItems,
         pid: process.pid,

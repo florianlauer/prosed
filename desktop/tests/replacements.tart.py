@@ -70,6 +70,24 @@ assert state()["text"] == before["text"]
 print("PASS single suggestion, clipboard restoration and undo", flush=True)
 
 original = before["original"]
+for name, prefix in [
+    ("single-one-paragraph", "<div>Bonjour,</div>"),
+    ("single-four-paragraphs", "<div>Bonjour,</div><div>Un point avant notre échange.</div><div>Merci de prendre le temps.</div><div>Voici ce que je propose.</div>"),
+    ("single-mixed-breaks", "<div>Avant 👍<br>Une autre ligne.</div><div>Encore un point.</div>"),
+]:
+    before = state({"html": prefix + f"<div>{original}</div>"})
+    r = before["wordRect"]
+    move(r["x"] + r["width"] / 2, r["y"] + r["height"] / 2)
+    capture(f"{name}-before")
+    click(r["x"] + 75, r["y"] + r["height"] + 54)
+    after = state()
+    assert after["text"] == before["text"].replace("prefere", "préfère"), (name, after["text"])
+    same_clipboard(before, after)
+    capture(f"{name}-after")
+    undo()
+    assert state()["text"] == before["text"], f"{name} undo"
+    print(f"PASS {name}, exact suggestion, clipboard restoration and undo", flush=True)
+
 for name, reset in [
     ("all-text", {}),
     ("all-badge", {}),
