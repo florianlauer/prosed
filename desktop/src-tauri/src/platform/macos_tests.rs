@@ -1,6 +1,18 @@
 use super::{replace_outcome, splice, EditableField, Replacement};
 use std::cell::{Cell, RefCell};
 
+#[test]
+fn verifies_the_entire_chromium_selection_with_virtual_paragraph_breaks() {
+    let original = "Avant 👍\nUn mot en gras\nAprès 👩‍💻";
+    let selected = original.replace('\n', "");
+    let range = Some((0, selected.encode_utf16().count()));
+    assert!(super::whole_selection_matches(original, &selected, range, true));
+    assert!(!super::whole_selection_matches(original, &selected, range, false));
+    assert!(!super::whole_selection_matches(original, "Avant 👍", Some((0, 8)), true));
+    assert!(!super::whole_selection_matches(original, &selected, Some((1, 1 + selected.encode_utf16().count())), true));
+    assert!(!super::whole_selection_matches(original, &selected, None, true));
+}
+
 fn replace_text(field: &impl EditableField, start: usize, end: usize, replacement: &str) -> bool {
     replace_outcome(field, start, end, replacement) == Replacement::Applied
 }
@@ -117,7 +129,7 @@ impl EditableField for TestField {
         self.allow_value
     }
 
-    fn type_text(&self, text: &str) -> bool {
+    fn type_text(&self, text: &str, wait: impl FnOnce()) -> bool {
         self.typed.set(self.typed.get() + 1);
         match self.edit {
             Edit::Apply => self.insert(text),
@@ -129,6 +141,7 @@ impl EditableField for TestField {
             Edit::Partial => self.text.borrow_mut().push_str(text),
             Edit::Unfocused => panic!("an unfocused field must not receive keyboard input"),
         }
+        wait();
         true
     }
 }

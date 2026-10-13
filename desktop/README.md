@@ -54,6 +54,22 @@ devenv shell -- cargo run --example probe -- <pid> <word> [replacement]
 
 It prints the field's text, frame, selection and the word's bounds, and replaces the word if you pass a replacement.
 
+### Testing replacements in Tart
+
+Use the headless `agent-macos` VM described in the [fleet Tart guide](https://github.com/florianlauer/fleet/blob/main/TART.md). Install the signed Prosed build in the guest and grant it Accessibility access. Keep all input and clipboard operations inside the guest.
+
+Copy `src-tauri/examples/replacement_fixture.cjs` and an Electron 44.4.2 runtime into the guest. Run the fixture with `PROSED_TEST_PROFILE` pointing to a temporary guest directory, then launch Prosed. The fixture provides a contenteditable editor and a deterministic Ollama response on guest ports 1421 and 11434. It uses Electron's current `ClipboardItem` API. Leave both ports free before starting it.
+
+With the guest desktop at 1440 × 900 and the fixture window at its default position, run from the repository root:
+
+```shell
+python3 desktop/tests/replacements.tart.py
+```
+
+The suite clicks the suggestion and Accept all through guest mouse events. It checks the exact text, undo, and clipboard contents for a long sentence, multiline Unicode, rich text, and empty, image and HTML clipboards. Screenshots go to `~/.tart/artifacts/agent-macos/replacements/`. The guest needs Node at `/opt/homebrew/bin/node` and permission for `osascript` to send input. It does not use Tart's experimental VNC server.
+
+The ignored Rust test `keys::tests::restores_empty_image_and_rich_text_clipboards` also runs only in the VM. Copy the test executable produced by `cargo test --lib --no-run` into the guest, then run it with `--exact keys::tests::restores_empty_image_and_rich_text_clipboards --ignored`.
+
 ## Release
 
 The macOS app is signed with a self-signed certificate. Gatekeeper doesn't accept it, but the signature stays the same from one build to the next, so macOS keeps the Accessibility permission across updates. An unsigned or ad hoc signed build looks like a new app every time.
