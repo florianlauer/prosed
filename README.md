@@ -30,6 +30,7 @@ Mistakes are underlined in place, one click fixes one word, and the default mode
 - [Settings](#settings)
 - [Benchmark](#benchmark)
 - [Developing](#developing)
+- [Website](#website)
 - [Desktop app](#desktop-app)
 - [Privacy](#privacy)
 - [Credits and license](#credits-and-license)
@@ -586,6 +587,14 @@ gh release create v<version> package/prosed-<version>.zip package/prosed-firefox
 ```
 
 For permanent Firefox distribution, submit the Firefox ZIP and reproducible source to [Mozilla Add-ons](https://extensionworkshop.com/documentation/publish/submitting-an-add-on/) for signing. The ZIP produced here is unsigned.
+
+## Website
+
+The main site is [prosed.flauercase.dev](https://prosed.flauercase.dev/), hosted on Vercel. GitHub Pages provides a second copy at [florianlauer.github.io/prosed](https://florianlauer.github.io/prosed/) after the Pages workflow first deploys from `main`.
+
+`.github/workflows/pages.yml` tests the site and builds both deployment paths on pull requests. After changes to `site/` or the workflow reach `main`, it publishes `site/dist/client` to GitHub Pages. The custom domain remains the canonical URL for search engines; no Pages custom domain or DNS change is required.
+
+To build locally, run `pnpm install --frozen-lockfile` in `site/`, then `pnpm build` for the custom domain or `SITE_BASE_PATH=/prosed/ pnpm build` for Pages. Both builds check the five locale pages, their local assets and the 404 links. GitHub Pages uses the direct analytics endpoint because it cannot serve Vercel's `/u` proxy.
 
 ## Desktop app
 

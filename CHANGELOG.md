@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- ci: publish the site to GitHub Pages alongside the existing custom domain, with checks for both deployment paths
 - feat: add a Firefox desktop 140+ build with Ollama and all existing API providers, corrections, rewrites and settings
 - privacy: store Firefox API keys in extension-origin IndexedDB, separate from content-script-accessible storage
 - test: add a headless Firefox integration suite for editing, settings and cloud credentials

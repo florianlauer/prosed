@@ -22,3 +22,5 @@ export function localeFromParam(param: string | undefined): Locale | null {
 }
 
 export const localePath = (locale: Locale) => (locale === DEFAULT_LOCALE ? "/" : `/${locale}`);
+
+export const sitePath = (path: string) => import.meta.env.BASE_URL + path.replace(/^\//, "");

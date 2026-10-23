@@ -1,6 +1,6 @@
 import type { Content } from "../content";
 import { DOWNLOADS, REPO, TARGETS, type Target } from "../download";
-import { LANGUAGE_NAMES, LOCALES, type Locale, localePath } from "../i18n/locales";
+import { LANGUAGE_NAMES, LOCALES, type Locale, localePath, sitePath } from "../i18n/locales";
 import { Demo } from "./Demo";
 import { DownloadButton, TARGET_ICON, useTarget } from "./Download";
 import { Icon, type IconName } from "./Icon";
@@ -75,8 +75,8 @@ export function Page({ locale, content }: { locale: Locale; content: Content }) 
   return (
     <>
       <header className="site-header">
-        <a className="wordmark" href={localePath(locale)}>
-          <img src="/brand/prosed.svg" alt="" width="28" height="28" />
+        <a className="wordmark" href={sitePath(localePath(locale))}>
+          <img src={sitePath("/brand/prosed.svg")} alt="" width="28" height="28" />
           prosed
         </a>
         <nav aria-label={content.header.language}>
@@ -84,7 +84,7 @@ export function Page({ locale, content }: { locale: Locale; content: Content }) 
             {LOCALES.map((other) => (
               <li key={other}>
                 <a
-                  href={localePath(other)}
+                  href={sitePath(localePath(other))}
                   hrefLang={other}
                   lang={other}
                   aria-current={other === locale ? "page" : undefined}

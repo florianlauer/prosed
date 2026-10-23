@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev --port 3000",
-    "build": "vp check && vp build && node scripts/check-dist.ts",
+    "build": "vp check && vp build && node scripts/prepare-static.ts && node scripts/check-dist.ts",
     "preview": "vp preview",
     "test": "vp test"
   },
