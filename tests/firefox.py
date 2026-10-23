@@ -32,8 +32,13 @@ style="width:650px;height:120px;font:20px sans-serif"></textarea>'></iframe></ht
 PROBE = """
 window.addEventListener('message', async ({source, data}) => {
   if (source !== window || !data?.prosedProbe) return;
+  let session;
+  if (data.prosedProbe.type === 'probe.storage') {
+    try { session = await chrome.storage.session?.get(null); } catch {}
+  }
   const reply = data.prosedProbe.type === 'probe.storage'
     ? {local: await chrome.storage.local.get(null), sync: await chrome.storage.sync.get(null),
+       session,
        databases: (await indexedDB.databases()).map(d => d.name)}
     : await chrome.runtime.sendMessage(data.prosedProbe);
   window.postMessage({prosedReply: reply}, '*');
@@ -148,9 +153,10 @@ class Browser:
         return self.js("return window.prosedReply;")
 
 
-def exercise(browser, origin, artifacts, real_ollama):
+def exercise(browser, origin, artifacts, real_ollama, private_mode):
     browser.visit(OPTIONS)
     browser.wait("document.querySelector('#provider')")
+    assert browser.js("return chrome.extension.inIncognitoContext;") == private_mode
     browser.select("#ui-locale", "en")
     browser.wait("document.documentElement.lang === 'en'")
     browser.wait("document.querySelector('#model option')")
@@ -188,7 +194,11 @@ def exercise(browser, origin, artifacts, real_ollama):
     assert browser.js("return Promise.all([chrome.storage.local.get(null),chrome.storage.sync.get(null)]).then(s=>!JSON.stringify(s).includes('firefox-test-key'));")
     browser.visit(OPTIONS)
     browser.wait("document.querySelector('#cloud-key-status')?.textContent.includes('An API key is saved')")
-    print("PASS cloud test/save, private persistent credentials and no key in local/sync storage", flush=True)
+    status = browser.js("return chrome.runtime.sendMessage({type:'cloud.keyStatus',provider:'custom'});")
+    assert status == {"configured": True, "temporary": private_mode}
+    hint = browser.js("return document.querySelector('#cloud-storage').textContent;")
+    assert ("cleared when Firefox closes" in hint) == private_mode
+    print("PASS cloud test/save, key retention hint and credentials surviving page reloads", flush=True)
 
     browser.visit(origin)
     browser.edit("#text", "Je prefere ce messsage recu hier.")
@@ -329,6 +339,7 @@ def main():
     parser.add_argument("--geckodriver", default=shutil.which("geckodriver"))
     parser.add_argument("--firefox", default=shutil.which("firefox") or "/Applications/Firefox.app/Contents/MacOS/firefox")
     parser.add_argument("--ollama", action="store_true", help="Use real Ollama on port 11434 through the isolated test proxy")
+    parser.add_argument("--private", action="store_true", help="Exercise Firefox permanent private browsing with session-only API keys")
     parser.add_argument("--artifacts", type=Path)
     args = parser.parse_args()
     if not args.geckodriver:
@@ -374,13 +385,15 @@ def main():
                 session = browser.call("/session", {"capabilities": {"alwaysMatch": {
                     "browserName": "firefox", "moz:firefoxOptions": {
                         "binary": args.firefox, "args": ["-headless"], "env": {"MOZ_HEADLESS": "1"},
-                        "prefs": {"extensions.webextensions.uuids": json.dumps({ADDON_ID: UUID})},
+                        "prefs": {"extensions.webextensions.uuids": json.dumps({ADDON_ID: UUID}),
+                                  "browser.privatebrowsing.autostart": args.private},
                     }}}})
                 browser.session = session["sessionId"]
                 print("Firefox " + session["capabilities"]["browserVersion"], flush=True)
                 browser.call("/window/rect", {"width": 1200, "height": 1100})
-                browser.call("/moz/addon/install", {"path": str(addon), "temporary": True})
-                exercise(browser, origin, args.artifacts, args.ollama)
+                browser.call("/moz/addon/install", {"path": str(addon), "temporary": True,
+                                                     "allowPrivateBrowsing": args.private})
+                exercise(browser, origin, args.artifacts, args.ollama, args.private)
                 print(f"Artifacts: {args.artifacts}", flush=True)
             except Exception:
                 if browser.session:

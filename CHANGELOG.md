@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: keep Firefox cloud providers usable in permanent private browsing with session-only API keys and an explicit retention hint
 - ci: publish the site to GitHub Pages alongside the existing custom domain, with checks for both deployment paths
 - feat: add a Firefox desktop 140+ build with Ollama and all existing API providers, corrections, rewrites and settings
 - privacy: store Firefox API keys in extension-origin IndexedDB, separate from content-script-accessible storage

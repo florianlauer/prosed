@@ -15,6 +15,8 @@ If you select an API provider in settings, checks and rewrites send the text dir
 
 API keys are separate from preferences. The extension stores them in local browser extension storage, restricts access to trusted extension pages and never syncs them. Firefox uses IndexedDB under the extension's own origin because its extension storage API cannot restrict content-script access. Chromium keeps keys in trusted-context local extension storage. This storage is not a password vault; someone with access to your browser profile can access it. The desktop stores keys in the operating system's keychain, not in `config.json`. Settings show whether a key is saved without reading it back into the key field. "Remove key" deletes the saved credential.
 
+In Firefox's permanent private browsing mode, keys stay in the extension's privileged session storage because IndexedDB is unavailable there. Firefox clears these keys when it closes. Settings identify this temporary storage; enter the keys again for a new browser session. Content scripts cannot read them.
+
 ## Third parties
 
 API mode uses the provider you select, such as OpenAI, Anthropic, OpenRouter, Gemini API, Mistral, Groq or DeepSeek. Your provider's privacy and retention policies apply to the text you send, and its API charges apply to your account. A custom endpoint follows the policies of whoever operates it. Prosed does not contact these services in local mode.

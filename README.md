@@ -148,6 +148,8 @@ To update later, run `git pull && npm run build`, then click the reload icon on 
 
 Firefox desktop 140 or newer uses the same correction, rewrite, dictionary, style and language settings as the Chromium extension. Use Ollama for local checks, or configure an API provider. Chrome's built-in Gemini Nano is unavailable; Gemini API with your own key remains supported.
 
+With Firefox set to "Never remember history", API keys last only for the browser session. Settings show this limit; enter the keys again after Firefox closes. Normal browsing keeps keys in the profile.
+
 Build the Firefox version from the repository:
 
 ```shell
@@ -577,6 +579,8 @@ python3 tests/firefox.py
 ```
 
 The suite launches headless Firefox with a disposable profile, tests editing and settings against a local API fixture, and writes screenshots and driver logs to a temporary directory. Pass `--firefox /path/to/firefox` or `--geckodriver /path/to/geckodriver` when needed. `--ollama` also checks real local inference through an isolated proxy; it leaves your running Ollama service and its origin configuration unchanged. The packaged test copy redirects only the Ollama port and adds a content-script probe to exercise denied credential access.
+
+Run `python3 tests/firefox.py --private` to exercise permanent private browsing, its temporary-key hint and credential isolation in that mode.
 
 To publish a release, bump `version` in `package.json`, add an entry to `CHANGELOG.md`, then:
 
