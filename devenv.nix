@@ -19,6 +19,10 @@
     pkgs.nsis
     # the showcase site (site/) uses pnpm
     pkgs.pnpm
+    # Firefox extension integration tests and package validation
+    pkgs.python3
+    pkgs.geckodriver
+    pkgs.web-ext
   ] ++ lib.optionals pkgs.stdenv.isLinux [
     pkgs.pkg-config
     pkgs.gtk3

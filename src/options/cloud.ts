@@ -90,6 +90,11 @@ export const initCloudSettings = async () => {
     if (current !== revision || id !== provider.value) return;
     if ("error" in reply) throw new Error(reply.error);
     configured = reply.configured;
+    if (!desktop) {
+      $("cloud-storage").textContent = reply.temporary
+        ? "In permanent private browsing, keys stay only for this browser session. They are cleared when Firefox closes and are never synced or exposed to websites."
+        : "Keys stay in this browser profile, in local extension storage. They are not synced and websites cannot read them.";
+    }
     key.placeholder = configured
       ? "Leave blank to keep the saved key"
       : "Paste your API key";

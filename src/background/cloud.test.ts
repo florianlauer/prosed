@@ -77,7 +77,7 @@ test("the service worker routes grammar, rewrite and meter requests through save
     );
     assert.deepEqual(
       await send({ type: "cloud.keyStatus", provider: "openai" }),
-      { configured: true },
+      { configured: true, temporary: false },
     );
     const requests: { model: string; prompt: string }[] = [];
     globalThis.fetch = async (url, init) => {
@@ -174,7 +174,7 @@ test("the service worker routes grammar, rewrite and meter requests through save
     );
     assert.deepEqual(
       await send({ type: "cloud.keyStatus", provider: "openai" }),
-      { configured: false },
+      { configured: false, temporary: false },
     );
     assert.match(
       (

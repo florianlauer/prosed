@@ -4,7 +4,7 @@
 
 `sed for your prose.`
 
-A grammar checker for Chromium browsers and, through a [desktop app](#desktop-app), every app on macOS and Windows. Local models keep your text on your computer. You can also use your own API key to send checks and rewrites directly to a provider you choose.
+A grammar checker for Firefox and Chromium browsers. Its [desktop app](#desktop-app) also checks text in every app on macOS and Windows. Local models keep your text on your computer. You can also use your own API key to send checks and rewrites directly to a provider you choose.
 
 Mistakes are underlined in place, one click fixes one word, and the default model is small enough to leave running all day. It's free, open source, and has no account. You install it [from a release zip or from source](#install-the-extension).
 
@@ -20,6 +20,7 @@ Mistakes are underlined in place, one click fixes one word, and the default mode
 - [Requirements](#requirements)
 - [Install the extension](#install-the-extension)
   - [One line agent install](#one-line-agent-install)
+  - [Firefox](#firefox)
 - [Set up a model](#set-up-a-model)
 - [Using it](#using-it)
   - [Rewrites](#rewrites)
@@ -29,6 +30,7 @@ Mistakes are underlined in place, one click fixes one word, and the default mode
 - [Settings](#settings)
 - [Benchmark](#benchmark)
 - [Developing](#developing)
+- [Website](#website)
 - [Desktop app](#desktop-app)
 - [Privacy](#privacy)
 - [Credits and license](#credits-and-license)
@@ -77,7 +79,7 @@ The Ollama path is tested on a MacBook Pro M2 Pro with 32 GB of RAM, in Arc. Gem
 
 ### Browser compatibility
 
-For Gemini Nano, use Google Chrome on desktop. For another Chromium browser, use Ollama unless a real model response has been verified. The table separates browser documentation from local tests; an unverified browser is not a confirmed failure. Last reviewed on October 4, 2026.
+For Gemini Nano, use Google Chrome on desktop. For another Chromium browser, use Ollama unless a real model response has been verified. The table separates browser documentation from local tests; an unverified browser is not a confirmed failure. Last reviewed on October 23, 2026.
 
 | Browser | Gemini Nano in Prosed | Recommended setup and evidence |
 | --- | --- | --- |
@@ -93,7 +95,8 @@ For Gemini Nano, use Google Chrome on desktop. For another Chromium browser, use
 | Ungoogled Chromium / Helium | No working Gemini setup confirmed here | Use Ollama. These projects carry patches removing AI integrations: [Ungoogled Chromium](https://github.com/ungoogled-software/ungoogled-chromium/blob/master/patches/core/ungoogled-chromium/disable-ai.patch), [Helium](https://github.com/imputnet/helium/blob/main/patches/ungoogled-chromium/disable-ai.patch). |
 | Other Chromium browsers, including Dia, Comet and ChatGPT Atlas | Unverified | Use Ollama if the browser can load this extension. Its built-in assistant doesn't establish access to Gemini Nano through the extension API. |
 | Chrome or other browsers on Android / iOS | This Gemini setup is unavailable | [Google's foundation-model APIs are desktop-only](https://developer.chrome.com/docs/ai/get-started). The Prosed extension isn't validated on mobile. |
-| Firefox / Safari | This Chromium extension isn't supported | Use the [desktop app](#desktop-app) with Ollama. |
+| Firefox, desktop 140+ | Chrome's Gemini Nano API is unavailable | Use the Firefox build with Ollama or an API provider. See [Firefox installation](#firefox). |
+| Safari | This extension isn't supported | Use the [desktop app](#desktop-app) with Ollama. |
 
 The selector currently labels the `LanguageModel` provider "Gemini Nano · Chrome". That label isn't a model identity check in other browsers. Browser AI assistants, Chrome's Gemini side panel and cloud Gemini subscriptions are separate from the local model used by Prosed.
 
@@ -113,6 +116,8 @@ The agent checks or installs Ollama, downloads the model, sets `OLLAMA_ORIGINS`,
 
 ### From a release zip
 
+These steps are for Chromium browsers. Firefox uses a separate build; see [Firefox](#firefox).
+
 1. Download `prosed-<version>.zip` from the [latest release](https://github.com/florianlauer/prosed/releases/latest).
 2. Unzip it into a folder you'll keep, for example `~/Extensions/prosed`. The browser loads the extension from that folder every time it starts, so don't unzip it in Downloads and then clean Downloads up.
 3. Open the extensions page of your browser: `chrome://extensions`, `arc://extensions`, `edge://extensions` or `brave://extensions`.
@@ -120,7 +125,7 @@ The agent checks or installs Ollama, downloads the model, sets `OLLAMA_ORIGINS`,
 5. Click "Load unpacked" and pick the unzipped folder. It is the one that contains `manifest.json`.
 6. Reload any tab that was already open. The extension only attaches to pages loaded after it.
 
-Browsers can't install the zip itself, and an unpacked extension doesn't update on its own. To update, unzip the new release over the same folder, then click the reload icon on the extension's card.
+Chromium browsers can't install the zip itself, and an unpacked extension doesn't update on its own. To update, unzip the new release over the same folder, then click the reload icon on the extension's card.
 
 ### From source
 
@@ -138,6 +143,25 @@ npm run build
 4. Reload any tab that was already open.
 
 To update later, run `git pull && npm run build`, then click the reload icon on the extension's card.
+
+### Firefox
+
+Firefox desktop 140 or newer uses the same correction, rewrite, dictionary, style and language settings as the Chromium extension. Use Ollama for local checks, or configure an API provider. Chrome's built-in Gemini Nano is unavailable; Gemini API with your own key remains supported.
+
+With Firefox set to "Never remember history", API keys last only for the browser session. Settings show this limit; enter the keys again after Firefox closes. Normal browsing keeps keys in the profile.
+
+Build the Firefox version from the repository:
+
+```shell
+npm install
+npm run build:firefox
+```
+
+Open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `build-firefox/manifest.json`. Reload your test page. A release archive named `prosed-firefox-<version>.zip` can also be loaded there. Temporary extensions disappear when Firefox restarts; use a Mozilla-signed `.xpi` for a permanent installation.
+
+In Firefox's extension permissions, allow Prosed on the sites you want to check. The installation prompt also declares website content and personal communications because checks can process drafts and messages. Local mode sends them only to your local Ollama; API mode sends them to the provider you select.
+
+For Ollama, include `moz-extension://*` in `OLLAMA_ORIGINS` on the server process. The commands below allow both Chromium and Firefox. Restart Ollama after changing the variable.
 
 ## Set up a model
 
@@ -173,7 +197,7 @@ Ollama refuses requests coming from browser extensions unless their origin is li
 <summary>macOS, with the menu bar app</summary>
 
 ```shell
-launchctl setenv OLLAMA_ORIGINS "chrome-extension://*"
+launchctl setenv OLLAMA_ORIGINS "chrome-extension://*,moz-extension://*"
 ```
 
 Then quit Ollama from the menu bar and open it again. Two catches. `launchctl setenv` only reaches apps that launchd starts, so it does nothing for an `ollama serve` typed in a terminal. And it is forgotten when the Mac restarts. For a setup that survives reboots, use the LaunchAgent in step 5.
@@ -191,7 +215,7 @@ Add these lines, save, then restart the service:
 
 ```ini
 [Service]
-Environment="OLLAMA_ORIGINS=chrome-extension://*"
+Environment="OLLAMA_ORIGINS=chrome-extension://*,moz-extension://*"
 ```
 
 ```shell
@@ -204,7 +228,7 @@ sudo systemctl restart ollama
 <details>
 <summary>Windows</summary>
 
-Quit Ollama from the taskbar. Open the settings, search for "environment variables", and choose "Edit environment variables for your account". Add a variable named `OLLAMA_ORIGINS` with the value `chrome-extension://*`, then start Ollama again from the Start menu.
+Quit Ollama from the taskbar. Open the settings, search for "environment variables", and choose "Edit environment variables for your account". Add a variable named `OLLAMA_ORIGINS` with the value `chrome-extension://*,moz-extension://*`, then start Ollama again from the Start menu.
 
 </details>
 
@@ -212,12 +236,12 @@ Quit Ollama from the taskbar. Open the settings, search for "environment variabl
 <summary>Any OS, running <code>ollama serve</code> yourself</summary>
 
 ```shell
-OLLAMA_ORIGINS="chrome-extension://*" ollama serve
+OLLAMA_ORIGINS="chrome-extension://*,moz-extension://*" ollama serve
 ```
 
 </details>
 
-`chrome-extension://*` lets every installed extension call your local Ollama. If you'd rather allow only this one, copy its ID from the extensions page and use `chrome-extension://<id>`. The ID changes if you load the `build` folder from another path.
+`chrome-extension://*,moz-extension://*` allows installed Chromium and Firefox extensions to call your local Ollama. If you'd rather allow only this one, copy its ID from the extensions page and use `chrome-extension://<id>`. The Chromium ID changes if you load the `build` folder from another path. For Firefox, use the internal UUID shown in `about:debugging` as `moz-extension://<uuid>`.
 
 **4. Check that it works.**
 
@@ -225,7 +249,7 @@ OLLAMA_ORIGINS="chrome-extension://*" ollama serve
 curl -s -o /dev/null -w "%{http_code}\n" -H "Origin: chrome-extension://test" http://127.0.0.1:11434/api/tags
 ```
 
-`200` means the extension will get through. `403` means `OLLAMA_ORIGINS` didn't reach the server. No answer means the server isn't running.
+For Firefox, repeat the request with `Origin: moz-extension://test`. `200` means the extension will get through. `403` means `OLLAMA_ORIGINS` didn't reach the server. No answer means the server isn't running.
 
 **5. Optional: start Ollama at login (macOS).**
 
@@ -251,7 +275,7 @@ On macOS, if you don't use the menu bar app, save this as `~/Library/LaunchAgent
   <key>EnvironmentVariables</key>
   <dict>
     <key>OLLAMA_ORIGINS</key>
-    <string>chrome-extension://*</string>
+    <string>chrome-extension://*,moz-extension://*</string>
   </dict>
   <key>RunAtLoad</key>
   <true/>
@@ -540,17 +564,41 @@ npm run zip     # build, then zip build/ into package/ for a release
 - `src/falseFriends.ts` holds the false friends list for "More natural".
 - `src/contentScript/text.ts` holds the diff and filtering logic, the rewrite checks and the sentence counting, with no DOM access. `npm test` runs its tests with Node's test runner (Node 23.6 or newer, which runs TypeScript directly).
 - `src/options/` is the settings page, and `src/settings.ts` reads and writes the settings.
-- `src/background/index.ts` is the service worker that talks to Ollama and to Chrome's `LanguageModel` API.
+- `src/background/index.ts` talks to Ollama and API providers. It runs as a service worker in Chromium and a background page in Firefox. Chrome also supports its built-in `LanguageModel` API.
 - `src/manifest.ts` generates `manifest.json` through [CRXJS](https://crxjs.dev).
 
 There is no watch mode. After each change, run `npm run build`, click the reload icon on the extension's card, and reload the test page.
+
+`npm run build:firefox` writes `build-firefox/`; `npm run zip:firefox` packages it as `package/prosed-firefox-<version>.zip`. The default build and ZIP commands still target Chromium.
+
+Run the Firefox integration suite with Python 3 and [geckodriver](https://github.com/mozilla/geckodriver/releases) on your PATH:
+
+```shell
+npm run build:firefox
+python3 tests/firefox.py
+```
+
+The suite launches headless Firefox with a disposable profile, tests editing and settings against a local API fixture, and writes screenshots and driver logs to a temporary directory. Pass `--firefox /path/to/firefox` or `--geckodriver /path/to/geckodriver` when needed. `--ollama` also checks real local inference through an isolated proxy; it leaves your running Ollama service and its origin configuration unchanged. The packaged test copy redirects only the Ollama port and adds a content-script probe to exercise denied credential access.
+
+Run `python3 tests/firefox.py --private` to exercise permanent private browsing, its temporary-key hint and credential isolation in that mode.
 
 To publish a release, bump `version` in `package.json`, add an entry to `CHANGELOG.md`, then:
 
 ```shell
 npm run zip
-gh release create v<version> package/prosed-<version>.zip --notes-file <notes>
+npm run zip:firefox
+gh release create v<version> package/prosed-<version>.zip package/prosed-firefox-<version>.zip --notes-file <notes>
 ```
+
+For permanent Firefox distribution, submit the Firefox ZIP and reproducible source to [Mozilla Add-ons](https://extensionworkshop.com/documentation/publish/submitting-an-add-on/) for signing. The ZIP produced here is unsigned.
+
+## Website
+
+The main site is [prosed.flauercase.dev](https://prosed.flauercase.dev/), hosted on Vercel. GitHub Pages provides a second copy at [florianlauer.github.io/prosed](https://florianlauer.github.io/prosed/) after the Pages workflow first deploys from `main`.
+
+`.github/workflows/pages.yml` tests the site and builds both deployment paths on pull requests. After changes to `site/` or the workflow reach `main`, it publishes `site/dist/client` to GitHub Pages. The custom domain remains the canonical URL for search engines; no Pages custom domain or DNS change is required.
+
+To build locally, run `pnpm install --frozen-lockfile` in `site/`, then `pnpm build` for the custom domain or `SITE_BASE_PATH=/prosed/ pnpm build` for Pages. Both builds check the five locale pages, their local assets and the 404 links. GitHub Pages uses the direct analytics endpoint because it cannot serve Vercel's `/u` proxy.
 
 ## Desktop app
 

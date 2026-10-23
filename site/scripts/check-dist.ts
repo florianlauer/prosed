@@ -1,9 +1,22 @@
-// Checks the prerendered output before Vercel ships it.
+// Checks the prerendered output for either static host.
 import { existsSync, readFileSync } from "node:fs";
 import { LOCALES, SITE_URL, localePath } from "../src/i18n/locales.ts";
 
 const out = new URL("../dist/client/", import.meta.url);
+const base = process.env.SITE_BASE_PATH || "/";
 const errors: string[] = [];
+
+const checkLocalUrls = (path: string, html: string) => {
+  for (const [, url] of html.matchAll(/(?:href|src)="(\/[^"]*)"/g)) {
+    if (!url.startsWith(base)) {
+      errors.push(`${path}: URL outside ${base}: ${url}`);
+      continue;
+    }
+    const resource = url.slice(base.length).split(/[?#]/)[0];
+    if (resource.includes(".") && !resource.startsWith("u/") && !existsSync(new URL(resource, out)))
+      errors.push(`${path}: missing resource ${resource}`);
+  }
+};
 
 for (const locale of LOCALES) {
   const path =
@@ -14,6 +27,7 @@ for (const locale of LOCALES) {
     continue;
   }
   const html = readFileSync(file, "utf8");
+  checkLocalUrls(path, html);
   if (!html.includes(`<html lang="${locale}"`)) errors.push(`${path}: no <html lang="${locale}">`);
   // Only <link> alternates: the language switcher's <a hreflang> don't count.
   const alternates = html.match(/<link[^>]*hreflang=/gi)?.length ?? 0;
@@ -22,9 +36,11 @@ for (const locale of LOCALES) {
   if (!html.includes('class="demo-mistake"'))
     errors.push(`${path}: the demo's still frame is missing`);
 }
-for (const path of ["404.html", "og.png", "sitemap.xml", "robots.txt"]) {
+for (const path of ["404.html", "og.png", "sitemap.xml", "robots.txt", ".nojekyll"]) {
   if (!existsSync(new URL(path, out))) errors.push(`missing ${path}`);
 }
+if (existsSync(new URL("404.html", out)))
+  checkLocalUrls("404.html", readFileSync(new URL("404.html", out), "utf8"));
 // public/sitemap.xml is written by hand: every page must be listed, with all its alternates.
 if (existsSync(new URL("sitemap.xml", out))) {
   const sitemap = readFileSync(new URL("sitemap.xml", out), "utf8");

@@ -12,6 +12,7 @@ test("keys stay in trusted local storage and are never returned by status", asyn
   const data: Record<string, string> = {};
   let access = "";
   globalThis.chrome = {
+    extension: { inIncognitoContext: true },
     storage: {
       local: {
         setAccessLevel: async ({ accessLevel }: { accessLevel: string }) => {
@@ -30,10 +31,19 @@ test("keys stay in trusted local storage and are never returned by status", asyn
   await saveCloudKey({ provider: "openai", apiKey: "  secret  " });
   assert.equal(access, "TRUSTED_CONTEXTS");
   assert.equal(await getCloudKey("openai"), "secret");
-  assert.equal(await cloudKeyStatus("openai"), true);
-  assert.equal(await cloudKeyStatus("anthropic"), false);
+  assert.deepEqual(await cloudKeyStatus("openai"), {
+    configured: true,
+    temporary: false,
+  });
+  assert.deepEqual(await cloudKeyStatus("anthropic"), {
+    configured: false,
+    temporary: false,
+  });
   await removeCloudKey("openai");
-  assert.equal(await cloudKeyStatus("openai"), false);
+  assert.deepEqual(await cloudKeyStatus("openai"), {
+    configured: false,
+    temporary: false,
+  });
   await assert.rejects(
     saveCloudKey({ provider: "openai", apiKey: " " }),
     /API key/,
@@ -68,4 +78,92 @@ test("only the extension settings page can manage keys or test draft endpoints",
     {},
   ])
     assert.throws(() => requireCloudSettingsSender(sender), /settings/);
+});
+
+test("browsers without trusted local storage never put keys in content-accessible storage", async (t) => {
+  let touchedLocal = false;
+  const original = Object.getOwnPropertyDescriptor(globalThis, "indexedDB");
+  t.after(() => {
+    if (original) Object.defineProperty(globalThis, "indexedDB", original);
+    else Reflect.deleteProperty(globalThis, "indexedDB");
+  });
+  globalThis.chrome = {
+    storage: {
+      local: {
+        set: async () => {
+          touchedLocal = true;
+        },
+        get: async () => {
+          touchedLocal = true;
+          return {};
+        },
+        remove: async () => {
+          touchedLocal = true;
+        },
+      },
+    },
+  } as any;
+  const unavailable = {
+    open() {
+      throw new Error("Credential storage unavailable");
+    },
+  };
+  Object.defineProperty(globalThis, "indexedDB", {
+    configurable: true,
+    value: unavailable,
+  });
+  for (const operation of [
+    () => saveCloudKey({ provider: "openai", apiKey: "secret" }),
+    () => getCloudKey("openai"),
+    () => removeCloudKey("openai"),
+  ])
+    await assert.rejects(operation, /Credential storage unavailable/);
+  assert.equal(touchedLocal, false);
+});
+
+test("private Firefox keys use trusted session storage and disappear when it clears", async (t) => {
+  const originalChrome = globalThis.chrome;
+  t.after(() => {
+    globalThis.chrome = originalChrome;
+  });
+  const data: Record<string, string> = {};
+  globalThis.chrome = {
+    extension: { inIncognitoContext: true },
+    storage: {
+      local: {
+        get: async () => {
+          throw new Error("Content-accessible storage must not be used");
+        },
+        set: async () => {
+          throw new Error("Content-accessible storage must not be used");
+        },
+        remove: async () => {
+          throw new Error("Content-accessible storage must not be used");
+        },
+      },
+      session: {
+        get: async (key: string) => ({ [key]: data[key] }),
+        set: async (values: object) => {
+          Object.assign(data, values);
+        },
+        remove: async (key: string) => {
+          delete data[key];
+        },
+      },
+    },
+  } as any;
+  await saveCloudKey({ provider: "openai", apiKey: "private-key" });
+  assert.equal(await getCloudKey("openai"), "private-key");
+  assert.deepEqual(await cloudKeyStatus("openai"), {
+    configured: true,
+    temporary: true,
+  });
+  await removeCloudKey("openai");
+  assert.equal(await getCloudKey("openai"), "");
+  await saveCloudKey({ provider: "openai", apiKey: "private-key" });
+  for (const key of Object.keys(data)) delete data[key];
+  assert.deepEqual(await cloudKeyStatus("openai"), {
+    configured: false,
+    temporary: true,
+  });
 });

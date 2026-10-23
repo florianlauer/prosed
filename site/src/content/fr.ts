@@ -41,13 +41,13 @@ export const fr: Content = {
     title: "Sur votre machine",
     where: "Où il tourne",
     models: "Quel modèle",
-    unsupported: "Firefox et Safari : utilisez l’app de bureau.",
+    unsupported: "Safari : utilisez l’app de bureau.",
     body: "Par défaut, les vérifications tournent sur un modèle local : Ollama, ou Gemini Nano intégré à Chrome. Dans les deux cas, votre texte reste sur votre ordinateur.",
     byok: "Vous pouvez aussi ajouter votre propre clé API OpenAI, Anthropic, Mistral ou d’un autre fournisseur. Les vérifications partent alors directement de votre ordinateur vers ce fournisseur.",
     privacy: "Politique de confidentialité",
     extension: {
       title: "Extension de navigateur",
-      body: "Pour les navigateurs Chromium comme Chrome et Arc. Fonctionne dans les zones de texte et les éditeurs riches.",
+      body: "Pour Firefox 140+ et les navigateurs Chromium comme Chrome et Arc. Fonctionne dans les zones de texte et les éditeurs riches.",
     },
     desktop: {
       title: "App de bureau",

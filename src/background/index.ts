@@ -95,7 +95,7 @@ const handlers: Handlers<keyof Messages> = {
   },
   "cloud.keyStatus": async ({ provider }, sender) => {
     requireCloudSettingsSender(sender);
-    return { configured: await cloudKeyStatus(provider) };
+    return cloudKeyStatus(provider);
   },
   "cloud.keySave": async ({ provider, apiKey }, sender) => {
     requireCloudSettingsSender(sender);

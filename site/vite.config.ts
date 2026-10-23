@@ -17,6 +17,7 @@ const generated = [
 ];
 
 export default defineConfig({
+  base: process.env.SITE_BASE_PATH || "/",
   fmt: { ignorePatterns: generated },
   lint: {
     ignorePatterns: generated,

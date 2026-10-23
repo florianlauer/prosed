@@ -17,7 +17,7 @@ export type Messages = {
   };
   "cloud.keyStatus": {
     request: { provider: CloudProvider };
-    reply: { configured: boolean } | { error: string };
+    reply: { configured: boolean; temporary: boolean } | { error: string };
   };
   "cloud.keySave": {
     request: { provider: CloudProvider; apiKey: string };

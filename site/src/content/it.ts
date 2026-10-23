@@ -41,13 +41,13 @@ export const it: Content = {
     title: "Sul tuo computer",
     where: "Dove funziona",
     models: "Quale modello",
-    unsupported: "Firefox e Safari: usa l’app desktop.",
+    unsupported: "Safari: usa l’app desktop.",
     body: "Di default i controlli girano su un modello locale: Ollama, oppure Gemini Nano integrato in Chrome. In entrambi i casi il tuo testo resta sul tuo computer.",
     byok: "Puoi anche aggiungere la tua chiave API di OpenAI, Anthropic, Mistral o di un altro fornitore. I controlli vanno allora direttamente dal tuo computer a quel fornitore.",
     privacy: "Informativa sulla privacy",
     extension: {
       title: "Estensione per il browser",
-      body: "Per i browser Chromium come Chrome e Arc. Funziona nelle aree di testo e negli editor avanzati.",
+      body: "Per Firefox 140+ e i browser Chromium come Chrome e Arc. Funziona nelle aree di testo e negli editor avanzati.",
     },
     desktop: {
       title: "App desktop",

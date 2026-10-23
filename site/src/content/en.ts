@@ -40,13 +40,13 @@ export const en = {
     title: "On your machine",
     where: "Where it runs",
     models: "Which model",
-    unsupported: "Firefox and Safari: use the desktop app.",
+    unsupported: "Safari: use the desktop app.",
     body: "Checks run on a local model by default: Ollama, or Gemini Nano built into Chrome. With either one, your text stays on your computer.",
     byok: "You can also add your own API key for OpenAI, Anthropic, Mistral or another provider. Checks then go straight from your computer to that provider.",
     privacy: "Privacy policy",
     extension: {
       title: "Browser extension",
-      body: "For Chromium browsers such as Chrome and Arc. Works in text areas and rich editors.",
+      body: "For Firefox 140+ and Chromium browsers such as Chrome and Arc. Works in text areas and rich editors.",
     },
     desktop: {
       title: "Desktop app",

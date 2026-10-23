@@ -32,6 +32,7 @@ const handlers: Handlers<
 > = {
   "cloud.keyStatus": async ({ provider }) => ({
     configured: await invoke<boolean>("cloud_key_status", { provider }),
+    temporary: false,
   }),
   "cloud.keySave": async ({ provider, apiKey }) => {
     await invoke("cloud_key_save", { provider, apiKey });

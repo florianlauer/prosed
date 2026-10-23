@@ -8,7 +8,7 @@ Ask the user before you install or upgrade software, run anything with `sudo`, o
 
 ## 1. Know the machine
 
-Find the OS (macOS, Windows, Linux) and ask the user which browser they use: Chrome, Arc, Edge, Brave or another Chromium browser. Firefox and Safari can't run this extension. Tell the user that and stop.
+Find the OS (macOS, Windows, Linux) and ask the user which browser they use: Firefox 140+, Chrome, Arc, Edge, Brave or another Chromium browser. Safari cannot run this extension; offer the desktop app instead.
 
 Check: you know the OS and a supported browser.
 
@@ -35,7 +35,7 @@ Check: `ollama --version` prints 0.34 or newer with no client/server warning, an
 
 ## 4. Allow the extension's origin
 
-Ollama answers browser extensions with a 403 unless `OLLAMA_ORIGINS` includes `chrome-extension://*`, set on the process that runs the server. Find out how the server runs:
+Ollama answers browser extensions with a 403 unless `OLLAMA_ORIGINS` includes `chrome-extension://*` for Chromium or `moz-extension://*` for Firefox, set on the process that runs the server. Use `chrome-extension://*,moz-extension://*` to support both. Find out how the server runs:
 
 - macOS: the menu bar app runs if `/Applications/Ollama.app` exists and `pgrep -lf Ollama` lists it. A Homebrew or hand-made LaunchAgent shows up in `launchctl list | grep -i ollama`.
 - Linux: the install script's service runs if `systemctl is-active ollama` prints `active`.
@@ -52,16 +52,22 @@ Run:
 curl -s -o /dev/null -w "%{http_code}\n" -H "Origin: chrome-extension://test" http://127.0.0.1:11434/api/tags
 ```
 
+For Firefox, use `Origin: moz-extension://test` instead.
+
 Check: it prints `200`. `403` means the running server doesn't have the variable: find the process that actually serves port 11434 and restart that one. No output means no server is running.
 
 ## 5. Download the extension
+
+For Firefox, select `prosed-firefox-<version>.zip`. For permanent installation, use a Mozilla-signed `.xpi` once one is distributed. An unsigned ZIP can only be loaded temporarily through `about:debugging`, as described in the README's "Firefox" section. Do not promise persistence across restarts for a temporary installation.
+
+The commands below select the Chromium ZIP. For Firefox, replace the `grep -v -- '-firefox-'` filter with `grep -- '-firefox-'`, or change the PowerShell filter to `name -like '*-firefox-*.zip'`.
 
 Put it in a folder the user will keep. The browser loads the extension from that folder on every start. Use `~/Extensions/prosed` on macOS and Linux, `%USERPROFILE%\Extensions\prosed` on Windows. If the folder exists, this is an update: replace its contents. Installs from before the rename live in `~/Extensions/ai-grammar` (`%USERPROFILE%\Extensions\ai-grammar`). If that folder exists, use it instead and keep its name: the browser ties the extension's settings to the folder, so a new folder starts with an empty dictionary.
 
 macOS and Linux:
 
 ```shell
-url=$(curl -s https://api.github.com/repos/florianlauer/prosed/releases/latest | grep -o '"browser_download_url": *"[^"]*\.zip"' | cut -d'"' -f4)
+url=$(curl -s https://api.github.com/repos/florianlauer/prosed/releases/latest | grep -o '"browser_download_url": *"[^"]*\.zip"' | grep -v -- '-firefox-' | head -n 1 | cut -d'"' -f4)
 dest=~/Extensions/prosed
 [ -d ~/Extensions/ai-grammar ] && dest=~/Extensions/ai-grammar
 mkdir -p "$dest"
@@ -73,7 +79,7 @@ Windows (PowerShell):
 
 ```powershell
 $release = Invoke-RestMethod https://api.github.com/repos/florianlauer/prosed/releases/latest
-$asset = $release.assets | Where-Object name -like '*.zip' | Select-Object -First 1
+$asset = $release.assets | Where-Object { $_.name -like '*.zip' -and $_.name -notlike '*-firefox-*' } | Select-Object -First 1
 $dest = "$env:USERPROFILE\Extensions\prosed"
 if (Test-Path "$env:USERPROFILE\Extensions\ai-grammar") { $dest = "$env:USERPROFILE\Extensions\ai-grammar" }
 New-Item -ItemType Directory -Force $dest | Out-Null
@@ -84,6 +90,8 @@ Expand-Archive "$env:TEMP\prosed.zip" -DestinationPath $dest -Force
 Check: `manifest.json` sits directly in that folder, not in a subfolder.
 
 ## 6. Load it in the browser
+
+For Firefox, follow the README's "Firefox" instructions, then continue at step 7. The steps below apply to Chromium browsers.
 
 The browser keeps extension loading behind a manual switch, so the user does this part. Give them these steps with the real folder path filled in:
 
