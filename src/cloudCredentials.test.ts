@@ -69,3 +69,44 @@ test("only the extension settings page can manage keys or test draft endpoints",
   ])
     assert.throws(() => requireCloudSettingsSender(sender), /settings/);
 });
+
+test("browsers without trusted local storage never put keys in content-accessible storage", async (t) => {
+  let touchedLocal = false;
+  const original = Object.getOwnPropertyDescriptor(globalThis, "indexedDB");
+  t.after(() => {
+    if (original) Object.defineProperty(globalThis, "indexedDB", original);
+    else Reflect.deleteProperty(globalThis, "indexedDB");
+  });
+  globalThis.chrome = {
+    storage: {
+      local: {
+        set: async () => {
+          touchedLocal = true;
+        },
+        get: async () => {
+          touchedLocal = true;
+          return {};
+        },
+        remove: async () => {
+          touchedLocal = true;
+        },
+      },
+    },
+  } as any;
+  const unavailable = {
+    open() {
+      throw new Error("Credential storage unavailable");
+    },
+  };
+  Object.defineProperty(globalThis, "indexedDB", {
+    configurable: true,
+    value: unavailable,
+  });
+  for (const operation of [
+    () => saveCloudKey({ provider: "openai", apiKey: "secret" }),
+    () => getCloudKey("openai"),
+    () => removeCloudKey("openai"),
+  ])
+    await assert.rejects(operation, /Credential storage unavailable/);
+  assert.equal(touchedLocal, false);
+});

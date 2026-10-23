@@ -33,7 +33,7 @@ import { siteHostname } from "./site";
 
 const hostname = siteHostname({
   href: location.href,
-  ancestorOrigins: Array.from(location.ancestorOrigins),
+  ancestorOrigins: Array.from(location.ancestorOrigins ?? []),
   referrer: document.referrer,
 });
 

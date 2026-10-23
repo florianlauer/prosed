@@ -41,13 +41,13 @@ export const es: Content = {
     title: "En tu ordenador",
     where: "Dónde funciona",
     models: "Qué modelo",
-    unsupported: "Firefox y Safari: usa la app de escritorio.",
+    unsupported: "Safari: usa la app de escritorio.",
     body: "Por defecto, las comprobaciones usan un modelo local: Ollama o Gemini Nano, integrado en Chrome. En ambos casos, tu texto no sale de tu ordenador.",
     byok: "También puedes añadir tu propia clave de API de OpenAI, Anthropic, Mistral u otro proveedor. Entonces las comprobaciones van directamente de tu ordenador a ese proveedor.",
     privacy: "Política de privacidad",
     extension: {
       title: "Extensión de navegador",
-      body: "Para navegadores Chromium como Chrome y Arc. Funciona en áreas de texto y editores enriquecidos.",
+      body: "Para Firefox 140+ y navegadores Chromium como Chrome y Arc. Funciona en áreas de texto y editores enriquecidos.",
     },
     desktop: {
       title: "App de escritorio",

@@ -41,13 +41,13 @@ export const de: Content = {
     title: "Auf Ihrem Rechner",
     where: "Wo es läuft",
     models: "Welches Modell",
-    unsupported: "Firefox und Safari: Nutzen Sie die Desktop-App.",
+    unsupported: "Safari: Nutzen Sie die Desktop-App.",
     body: "Standardmäßig laufen die Prüfungen auf einem lokalen Modell: Ollama oder Gemini Nano, das in Chrome eingebaut ist. In beiden Fällen bleibt Ihr Text auf Ihrem Computer.",
     byok: "Sie können auch Ihren eigenen API-Schlüssel für OpenAI, Anthropic, Mistral oder einen anderen Anbieter hinterlegen. Die Prüfungen gehen dann direkt von Ihrem Computer an diesen Anbieter.",
     privacy: "Datenschutzerklärung",
     extension: {
       title: "Browser-Erweiterung",
-      body: "Für Chromium-Browser wie Chrome und Arc. Funktioniert in Textfeldern und Rich-Text-Editoren.",
+      body: "Für Firefox 140+ und Chromium-Browser wie Chrome und Arc. Funktioniert in Textfeldern und Rich-Text-Editoren.",
     },
     desktop: {
       title: "Desktop-App",

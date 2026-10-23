@@ -13,7 +13,7 @@ If you select an API provider in settings, checks and rewrites send the text dir
 - Extension: in the browser's extension storage. When browser sync is on, the browser syncs it to your account like bookmarks.
 - Desktop app: in `config.json` in the app's config folder (`~/Library/Application Support/com.florianlauer.prosed/` on macOS, `%APPDATA%\com.florianlauer.prosed\` on Windows).
 
-API keys are separate from preferences. The extension stores them in local browser extension storage, restricts access to trusted extension pages and never syncs them. This storage is not a password vault; someone with access to your browser profile can access it. The desktop stores keys in the operating system's keychain, not in `config.json`. Settings show whether a key is saved without reading it back into the key field. "Remove key" deletes the saved credential.
+API keys are separate from preferences. The extension stores them in local browser extension storage, restricts access to trusted extension pages and never syncs them. Firefox uses IndexedDB under the extension's own origin because its extension storage API cannot restrict content-script access. Chromium keeps keys in trusted-context local extension storage. This storage is not a password vault; someone with access to your browser profile can access it. The desktop stores keys in the operating system's keychain, not in `config.json`. Settings show whether a key is saved without reading it back into the key field. "Remove key" deletes the saved credential.
 
 ## Third parties
 

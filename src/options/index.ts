@@ -128,7 +128,7 @@ const modelStatus = (): MessageKey => {
       return "modelOfflineDesktop";
     if (gemini === "available") return "ollamaOfflineGeminiReady";
     if (gemini !== "unavailable") return "ollamaOfflineGeminiDownload";
-    return "noModelAvailable";
+    return "modelOfflineDesktop";
   }
   if (models.length === 0) return "modelEmpty";
   return "modelHint";

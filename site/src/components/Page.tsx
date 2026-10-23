@@ -12,7 +12,7 @@ const UPSTREAM = "https://github.com/nucleartux/ai-grammar";
 const DETAIL: Record<Target, string> = {
   macos: "Apple silicon",
   windows: "x64",
-  extension: "Chrome, Arc, Brave, Edge",
+  extension: "Firefox, Chrome, Arc, Brave, Edge",
 };
 
 type Mark = { icon: IconName; name: string };
@@ -25,11 +25,9 @@ const BROWSERS: Mark[] = [
   { icon: "edge", name: "Edge" },
   { icon: "vivaldi", name: "Vivaldi" },
   { icon: "opera", name: "Opera" },
-];
-const UNSUPPORTED: Mark[] = [
   { icon: "firefox", name: "Firefox" },
-  { icon: "safari", name: "Safari" },
 ];
+const UNSUPPORTED: Mark[] = [{ icon: "safari", name: "Safari" }];
 const LOCAL_MODELS: Mark[] = [
   { icon: "ollama", name: "Ollama" },
   { icon: "gemini", name: "Gemini Nano" },

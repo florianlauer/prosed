@@ -2,9 +2,11 @@ import gulp from 'gulp'
 import zip from 'gulp-zip'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
-const manifest = require('../build/manifest.json')
+const firefox = process.argv[2] === 'firefox'
+const directory = firefox ? 'build-firefox' : 'build'
+const manifest = require(`../${directory}/manifest.json`)
 
 gulp
-  .src('build/**', { encoding: false })
-  .pipe(zip(`${manifest.name.replaceAll(' ', '-')}-${manifest.version}.zip`))
+  .src(`${directory}/**`, { encoding: false })
+  .pipe(zip(`${manifest.name.replaceAll(' ', '-')}${firefox ? '-firefox' : ''}-${manifest.version}.zip`))
   .pipe(gulp.dest('package'))

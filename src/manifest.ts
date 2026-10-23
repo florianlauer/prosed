@@ -4,7 +4,7 @@ import packageData from "../package.json";
 //@ts-ignore
 const isDev = process.env.NODE_ENV == "development";
 
-export default defineManifest({
+export default defineManifest(({ mode }) => ({
   name: `${packageData.displayName || packageData.name}${isDev ? ` ➡️ Dev` : ""}`,
   description: packageData.description,
   version: packageData.version,
@@ -38,10 +38,25 @@ export default defineManifest({
       js: ["src/contentScript/index.ts"],
     },
   ],
-  background: {
-    service_worker: "src/background/index.ts",
-    type: "module",
-  },
+  background:
+    mode === "firefox"
+      ? { scripts: ["src/background/index.ts"], type: "module" }
+      : { service_worker: "src/background/index.ts", type: "module" },
+  ...(mode === "firefox"
+    ? {
+        host_permissions: ["http://127.0.0.1/*"],
+        browser_specific_settings: {
+          gecko: {
+            id: "prosed@florianlauer.dev",
+            strict_min_version: "140.0",
+            data_collection_permissions: {
+              required: ["websiteContent", "personalCommunications"],
+            },
+          },
+          gecko_android: { strict_min_version: "142.0" },
+        },
+      }
+    : {}),
   web_accessible_resources: [
     {
       resources: [
@@ -53,4 +68,4 @@ export default defineManifest({
       matches: [],
     },
   ],
-});
+}));

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- feat: add a Firefox desktop 140+ build with Ollama and all existing API providers, corrections, rewrites and settings
+- privacy: store Firefox API keys in extension-origin IndexedDB, separate from content-script-accessible storage
+- test: add a headless Firefox integration suite for editing, settings and cloud credentials
+
 ## Desktop 0.2.2 [2026.10.12]
 
 - fix: restore macOS text geometry after Electron disables accessibility, including versions without a readable activation flag

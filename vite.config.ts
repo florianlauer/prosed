@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   return {
     build: {
       emptyOutDir: true,
-      outDir: "build",
+      outDir: mode === "firefox" ? "build-firefox" : "build",
       rolldownOptions: {
         output: {
           chunkFileNames: "assets/chunk-[hash].js",
@@ -16,6 +16,8 @@ export default defineConfig(({ mode }) => {
       },
     },
 
-    plugins: [crx({ manifest })],
+    plugins: [
+      crx({ manifest, browser: mode === "firefox" ? "firefox" : "chrome" }),
+    ],
   };
 });
