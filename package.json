@@ -20,7 +20,9 @@
     "fmt": "prettier --write '**/*.{tsx,ts,json,css,scss,md}'",
     "zip": "npm run build && node src/zip.js",
     "zip:firefox": "npm run build:firefox && node src/zip.js firefox",
-    "test": "node --test 'src/**/*.test.ts'"
+    "test": "node --test 'src/**/*.test.ts'",
+    "desktop:release:macos": "bash desktop/scripts/release-macos.sh",
+    "desktop:test:release": "node --test desktop/tests/release-macos.test.mjs"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",

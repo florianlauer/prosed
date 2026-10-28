@@ -5,7 +5,10 @@
   languages.rust = {
     enable = true;
     channel = "stable";
-    targets = [ "x86_64-pc-windows-msvc" ];
+    targets = [ "x86_64-pc-windows-msvc" ] ++ lib.optionals pkgs.stdenv.isDarwin [
+      "aarch64-apple-darwin"
+      "x86_64-apple-darwin"
+    ];
   };
 
   packages = [

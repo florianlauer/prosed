@@ -8,9 +8,8 @@ fn main() {
     tauri_build::build()
 }
 
-// Rust links libiconv, and the Nix linker wrapper of devenv finds its own copy first, so the
-// binary loads it from /nix/store: a signed release refuses to, and other Macs don't have it.
-// The stub of the macOS SDK, found first, links the copy that ships with macOS.
+// Nix's libiconv and libcharset belong to the host architecture and cannot ship with the app.
+// SDK stubs link the system copies for both Intel and Apple Silicon.
 fn system_iconv() {
     // xcrun outside the Nix SDK that devenv points it to
     let sdk = Command::new("/usr/bin/xcrun")
@@ -21,17 +20,21 @@ fn system_iconv() {
         .ok()
         .filter(|out| out.status.success())
         .map(|out| PathBuf::from(String::from_utf8_lossy(&out.stdout).trim()));
-    let Some(stub) = sdk.map(|sdk| sdk.join("usr/lib/libiconv.tbd")).filter(|stub| stub.exists()) else {
-        println!("cargo:warning=no macOS SDK found: libiconv may be linked from /nix/store");
+    let Some(sdk) = sdk else {
+        println!("cargo:warning=no macOS SDK found: libiconv and libcharset may be linked from /nix/store");
         return;
     };
-    // only this stub, so the rest of the link keeps its libraries
+    // Only these stubs, so the rest of the link keeps its libraries.
     let dir = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("iconv");
     std::fs::create_dir_all(&dir).unwrap();
-    // the Nix linker is older than the SDK and rejects the stub over targets it doesn't know
-    let text = std::fs::read_to_string(&stub).unwrap();
-    let text = ["arm64e.x1-macos", "arm64e.x1-maccatalyst"].iter().fold(text, |text, target| drop_target(&text, target));
-    std::fs::write(dir.join("libiconv.tbd"), text).unwrap();
+    // libiconv reexports the versioned libcharset.1 name.
+    for name in ["libiconv", "libcharset.1"] {
+        let stub = sdk.join(format!("usr/lib/{name}.tbd"));
+        // The Nix linker rejects SDK targets it doesn't know.
+        let text = std::fs::read_to_string(&stub).unwrap();
+        let text = ["arm64e.x1-macos", "arm64e.x1-maccatalyst"].iter().fold(text, |text, target| drop_target(&text, target));
+        std::fs::write(dir.join(format!("{name}.tbd")), text).unwrap();
+    }
     println!("cargo:rustc-link-search=native={}", dir.display());
     println!("cargo:rerun-if-changed=build.rs");
 }

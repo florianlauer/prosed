@@ -29,3 +29,4 @@ devenv.local.nix
 # desktop
 /desktop/src-tauri/target
 /desktop/dist
+/desktop/release
