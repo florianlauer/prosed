@@ -1,9 +1,10 @@
 import { Fragment, useRef, useState } from "react";
 import type { Content } from "../content";
+import { REPO } from "../download";
 import { Icon } from "./Icon";
 
 const COMMANDS = [
-  "brew tap florianlauer/prosed https://github.com/florianlauer/prosed",
+  `brew tap florianlauer/prosed ${REPO}`,
   "brew trust --cask florianlauer/prosed/prosed",
   "brew install --cask florianlauer/prosed/prosed",
 ];

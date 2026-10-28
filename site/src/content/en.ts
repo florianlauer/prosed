@@ -21,7 +21,7 @@ export const en = {
     other: "Other downloads:",
     homebrew: {
       title: "Or install with Homebrew",
-      hint: "Paste into your Terminal.",
+      hint: "Paste into your Terminal. On Homebrew 6 or earlier, skip the brew trust command.",
       copy: "Copy commands",
       copied: "Copied",
       copyFailed: "Automatic copy unavailable. The commands are selected.",

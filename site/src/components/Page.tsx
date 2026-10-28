@@ -137,9 +137,9 @@ export function Page({ locale, content }: { locale: Locale; content: Content }) 
                 {targetName[other]}
               </a>
             ))}
-            <span className="homebrew-label">Homebrew</span>
+            {target === "macos" ? <span className="homebrew-label">Homebrew</span> : null}
           </p>
-          <Homebrew labels={content.hero.homebrew} />
+          {target === "macos" ? <Homebrew labels={content.hero.homebrew} /> : null}
         </section>
 
         <div className="hero-demo">

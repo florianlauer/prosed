@@ -22,7 +22,7 @@ export const fr: Content = {
     other: "Autres téléchargements :",
     homebrew: {
       title: "Ou installez avec Homebrew",
-      hint: "À coller dans le Terminal.",
+      hint: "À coller dans le Terminal. Avec Homebrew 6 ou antérieur, ignorez la commande brew trust.",
       copy: "Copier les commandes",
       copied: "Copié",
       copyFailed: "Copie automatique indisponible. Les commandes sont sélectionnées.",

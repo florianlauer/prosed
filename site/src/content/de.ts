@@ -22,7 +22,7 @@ export const de: Content = {
     other: "Weitere Downloads:",
     homebrew: {
       title: "Oder mit Homebrew installieren",
-      hint: "Im Terminal einfügen.",
+      hint: "Im Terminal einfügen. Bei Homebrew 6 oder älter den Befehl brew trust überspringen.",
       copy: "Befehle kopieren",
       copied: "Kopiert",
       copyFailed: "Automatisches Kopieren nicht verfügbar. Die Befehle sind ausgewählt.",
