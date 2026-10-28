@@ -20,6 +20,13 @@ export const fr: Content = {
       extension: "Télécharger l’extension",
     },
     other: "Autres téléchargements :",
+    homebrew: {
+      title: "Ou installez avec Homebrew",
+      hint: "À coller dans le Terminal.",
+      copy: "Copier les commandes",
+      copied: "Copié",
+      copyFailed: "Copie automatique indisponible. Les commandes sont sélectionnées.",
+    },
     runs: "Tourne sur",
   },
   features: {
