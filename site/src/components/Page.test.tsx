@@ -1,9 +1,25 @@
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { contentFor } from "../content";
+import type { Target } from "../download";
+import * as Download from "./Download";
 import { Page } from "./Page";
 
-afterEach(() => vi.unstubAllEnvs());
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
+});
+
+describe("Homebrew availability", () => {
+  for (const target of ["macos", "windows", "extension"] satisfies Target[]) {
+    it(`shows Homebrew instructions only on macOS when the target is ${target}`, () => {
+      vi.spyOn(Download, "useTarget").mockReturnValue(target);
+      const html = renderToString(<Page locale="fr" content={contentFor("fr")} />);
+      expect(html.includes('class="homebrew"')).toBe(target === "macos");
+      expect(html.includes('class="homebrew-label"')).toBe(target === "macos");
+    });
+  }
+});
 
 describe("site deployment paths", () => {
   for (const base of ["/", "/prosed/"]) {

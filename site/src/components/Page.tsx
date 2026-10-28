@@ -3,6 +3,7 @@ import { DOWNLOADS, REPO, TARGETS, type Target } from "../download";
 import { LANGUAGE_NAMES, LOCALES, type Locale, localePath, sitePath } from "../i18n/locales";
 import { Demo } from "./Demo";
 import { DownloadButton, TARGET_ICON, useTarget } from "./Download";
+import { Homebrew } from "./Homebrew";
 import { Icon, type IconName } from "./Icon";
 import { ThemeToggle } from "./ThemeToggle";
 import { FixVignette, MemoryVignette, RewriteVignette } from "./Vignettes";
@@ -10,7 +11,7 @@ import { FixVignette, MemoryVignette, RewriteVignette } from "./Vignettes";
 const UPSTREAM = "https://github.com/nucleartux/ai-grammar";
 
 const DETAIL: Record<Target, string> = {
-  macos: "Apple silicon",
+  macos: "Apple Silicon + Intel",
   windows: "x64",
   extension: "Firefox, Chrome, Arc, Brave, Edge",
 };
@@ -136,7 +137,9 @@ export function Page({ locale, content }: { locale: Locale; content: Content }) 
                 {targetName[other]}
               </a>
             ))}
+            {target === "macos" ? <span className="homebrew-label">Homebrew</span> : null}
           </p>
+          {target === "macos" ? <Homebrew labels={content.hero.homebrew} /> : null}
         </section>
 
         <div className="hero-demo">

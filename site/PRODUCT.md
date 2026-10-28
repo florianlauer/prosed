@@ -31,7 +31,7 @@ The product works inside the fields people already type in: text areas and rich 
 - Five languages for the page: en (at `/`), fr, de, es, it, the same as the product's interface.
 - One page plus a 404. The documentation stays in the repo README.
 - No analytics, no third-party requests, fonts self-hosted.
-- Distribution is GitHub releases only. There is no Chrome Web Store listing.
+- Builds are distributed through GitHub releases. The macOS app can also be installed through the project's Homebrew tap. There is no Chrome Web Store listing.
 
 ## Brand Commitments
 
